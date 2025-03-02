@@ -15,49 +15,18 @@ class EmbeddingManager @Autowired constructor(
     private val flaskServerService: FlaskServerService
 ) {
 
-    fun isEmbeddedJsonExist(embeddedJsonPath: String): Boolean {
-        val file = File(embeddedJsonPath)
-        if (!file.exists() || file.length() <= 200) {
-            println("JSON nie istnieje")
-            return false
-        }
 
-        val objectMapper = jacksonObjectMapper()
-        val jsonData: JsonData = try {
-            objectMapper.readValue(file)
+    fun isEmbeddedJsonExist(embJsonPath: String): Boolean {
+        val file = File(embJsonPath)
+        if (!file.exists()) return false
+
+        return try {
+            val content = file.readText().trim()
+            content.isNotEmpty() && content.length >= 200
         } catch (e: Exception) {
-            println("Błąd JSON: ${e.message}")
-            return false
+            println("Plik jest, ale jest za krótki (ten plik w formacie Json)")
+            false
         }
-
-        var withEmbedding = 0
-        var withoutEmbedding = 0
-
-        jsonData.fragments.forEach { fragment ->
-            if (fragment.embeddedContent != null && fragment.embeddedContent.isNotEmpty()) {
-                withEmbedding++
-            } else {
-                withoutEmbedding++
-            }
-        }
-
-        val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
-        val statsFile = File("statystykiEmbedded_$timestamp.txt")
-
-        val report = """
-        📊 STATYSTYKI EMBEDDED JSON 📊
-        Data: $timestamp
-        📌 Liczba wszystkich fragmentów: ${jsonData.fragments.size}
-        ✅ Z embeddingiem: $withEmbedding
-        ❌ Bez embeddingu: $withoutEmbedding
-        ---------------------------------------------------
-        ${if (withoutEmbedding == 0) "✅ Wszystkie fragmenty mają embedding!" else "⚠️ Brakuje embeddingu w niektórych fragmentach!"}
-    """.trimIndent()
-
-        statsFile.writeText(report)
-        println("📄 Statystyki zapisane do: ${statsFile.absolutePath}")
-
-        return withoutEmbedding == 0
     }
 
     fun countFragmentsWithoutEmbedding(embeddedJsonPath: String): Int {
@@ -91,6 +60,7 @@ class EmbeddingManager @Autowired constructor(
             rawJsonData.fragments.forEach { fragment ->
                 flaskServerService.enqueue(fragment.content)
             }
+            flaskServerService.startServer()
 
             println("Dodano ${rawJsonData.fragments.size} fragmentów do kolejki.")
 

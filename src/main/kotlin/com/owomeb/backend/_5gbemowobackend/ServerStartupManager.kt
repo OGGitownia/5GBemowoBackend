@@ -1,9 +1,6 @@
 package com.owomeb.backend._5gbemowobackend
 
-import com.owomeb.backend._5gbemowobackend.baseCreators.EmbeddingManager
-import com.owomeb.backend._5gbemowobackend.baseCreators.JSONManager
-import com.owomeb.backend._5gbemowobackend.baseCreators.MarkdownManager
-import com.owomeb.backend._5gbemowobackend.baseCreators.NormManager
+import com.owomeb.backend._5gbemowobackend.baseCreators.*
 import org.springframework.stereotype.Component
 import java.io.File
 import kotlin.system.exitProcess
@@ -20,7 +17,7 @@ class ServerStartupManager(
     private val docPath = "src/main/resources/norms/36331-e60.doc"
     private val jsonPath = "src/main/resources/norms/36331-e60.json"
     private val normaUrl = "https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-e60.zip"
-    private val embeddedJsonPath = "src/main/resources/norms/36331-e60embedded.json"
+    private val embeddedJsonPath = "src/main/resources/norms/embeeded36331-e60.json"
     private var init = false
 
     fun serverStartup() {
@@ -57,7 +54,7 @@ class ServerStartupManager(
         }
 
 
-        if (!embeddingManager.isEmbeddedJsonExist(jsonPath)) {
+        if (!embeddingManager.isEmbeddedJsonExist(embeddedJsonPath)) {
             if (!init) {
                 println("embedded for json nie istnieje. Czyszczenie serwera...")
                 resetServer()
@@ -68,6 +65,7 @@ class ServerStartupManager(
                     println("Błąd: Nie udało się przekonwertować json na json. Czysty absurd")
                     exitProcess(1)
                 }
+                /*
                 var a = embeddingManager.countFragmentsWithoutEmbedding(jsonPath)
                 Thread.sleep(10000)
                 while(a > 0){
@@ -75,6 +73,8 @@ class ServerStartupManager(
                     println("FRAGMENTS without emb: ${a}")
                     Thread.sleep(2000)
                 }
+                
+                 */
             }
         }
 
@@ -105,7 +105,7 @@ class ServerStartupManager(
         }
 
          */
-
+        Stats.getStats(jsonPath, embeddedJsonPath)
         println("\nSerwer uruchomiony poprawnie!\n")
     }
 

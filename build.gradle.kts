@@ -21,6 +21,9 @@ repositories {
 }
 
 dependencies {
+
+    implementation("org.json:json:20240303")
+
     // Spring Boot
     implementation("org.springframework.boot:spring-boot-starter-data-elasticsearch")
     implementation("org.springframework.boot:spring-boot-starter-web")
