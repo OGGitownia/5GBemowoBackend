@@ -254,11 +254,13 @@ class JSONManager {
 }
 
 @Serializable
-data class JsonData(val fragments: List<Fragment>)
+data class JsonData(val fragments: MutableList<Fragment>)
 
 @Serializable
-data class Fragment(val content: String)
-
+data class Fragment(
+    val content: String,
+    var embeddedContent: List<Float> = emptyList() // Początkowo pusta lista
+)
 data class Statistics(
     var totalFragments: Int = 0,
     var totalLength: Int = 0,

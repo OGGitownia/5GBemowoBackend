@@ -1,15 +1,27 @@
-package com.owomeb.backend._5gbemowobackend
+package com.owomeb.backend._5gbemowobackend.random
 
+import com.owomeb.backend._5gbemowobackend.baseCreators.FlaskServerService
 import org.springframework.stereotype.Component
 import org.springframework.beans.factory.DisposableBean
 import java.io.*
+import java.net.HttpURLConnection
+import java.net.URL
 
 @Component
-class LlamaShutdownManager : DisposableBean {
+class LlamaShutdownManager(private val flaskServerService: FlaskServerService) : DisposableBean {
 
     override fun destroy() {
         println("\n=== Zamykanie modelu Llama 3.1... ===\n")
         stopLlama()
+        stopEmbedding()
+    }
+
+    fun stopEmbedding() {
+        println(" Zatrzymywanie serwera embeddingów...")
+
+        val response = flaskServerService.shutdownServer()
+
+        println(" Odpowiedź z Flaska: $response")
     }
 
     private fun stopLlama() {

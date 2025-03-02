@@ -1,4 +1,4 @@
-package com.owomeb.backend._5gbemowobackend
+package com.owomeb.backend._5gbemowobackend.random
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

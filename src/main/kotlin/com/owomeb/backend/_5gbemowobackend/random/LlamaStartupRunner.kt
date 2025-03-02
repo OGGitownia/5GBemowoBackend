@@ -1,11 +1,4 @@
-package com.owomeb.backend._5gbemowobackend
-
-import org.springframework.boot.CommandLineRunner
-import org.springframework.stereotype.Component
-import java.io.*
-import java.net.HttpURLConnection
-import java.net.URL
-import kotlin.concurrent.thread
+package com.owomeb.backend._5gbemowobackend.random
 
 /*
 @Component
