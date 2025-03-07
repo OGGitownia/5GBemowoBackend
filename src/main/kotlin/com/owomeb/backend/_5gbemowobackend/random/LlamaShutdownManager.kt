@@ -1,6 +1,8 @@
 package com.owomeb.backend._5gbemowobackend.random
 
 import com.owomeb.backend._5gbemowobackend.baseCreators.FlaskServerService
+import com.owomeb.backend._5gbemowobackend.hybridsearch.HybridSearchManagerController
+import com.owomeb.backend._5gbemowobackend.hybridsearch.HybridSearchService
 import org.springframework.stereotype.Component
 import org.springframework.beans.factory.DisposableBean
 import java.io.*
@@ -8,10 +10,14 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 @Component
-class LlamaShutdownManager(private val flaskServerService: FlaskServerService) : DisposableBean {
+class LlamaShutdownManager(private val flaskServerService: FlaskServerService,
+                           private val hybridSearchManagerController: HybridSearchManagerController,
+                           private val hybridSearchService: HybridSearchService) : DisposableBean {
 
     override fun destroy() {
         println("\n=== Zamykanie modelu Llama 3.1... ===\n")
+
+        stopHybridToyota()
         stopLlama()
         stopEmbedding()
     }
@@ -22,6 +28,17 @@ class LlamaShutdownManager(private val flaskServerService: FlaskServerService) :
         val response = flaskServerService.shutdownServer()
 
         println(" Odpowiedź z Flaska: $response")
+    }
+
+    fun stopHybridToyota(){
+        println(" Zatrzymywanie servisu Toyoty")
+
+        hybridSearchManagerController.shutdownServer()
+    }
+    fun stopHybridSearchEngine(){
+        println("Zatrzymywanie search engine")
+
+        hybridSearchService.shutdownServer()
     }
 
     private fun stopLlama() {

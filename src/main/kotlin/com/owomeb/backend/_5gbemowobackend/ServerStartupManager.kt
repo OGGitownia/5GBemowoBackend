@@ -1,6 +1,8 @@
 package com.owomeb.backend._5gbemowobackend
 
 import com.owomeb.backend._5gbemowobackend.baseCreators.*
+import com.owomeb.backend._5gbemowobackend.hybridsearch.HybridSearchManagerController
+import com.owomeb.backend._5gbemowobackend.hybridsearch.HybridSearchService
 import org.springframework.stereotype.Component
 import java.io.File
 import kotlin.system.exitProcess
@@ -10,7 +12,9 @@ class ServerStartupManager(
     private val normaManager: NormManager,
     private val jsonManager: JSONManager,
     private val markDownManager: MarkdownManager,
-    private val embeddingManager: EmbeddingManager
+    private val embeddingManager: EmbeddingManager,
+    private val hybridSearchManagerController: HybridSearchManagerController,
+    private val hybridSearchService: HybridSearchService
 ) {
     private val zipPath = "src/main/resources/norms/norma.zip"
     private val markdownPath = "src/main/resources/norms/36331-e60.md"
@@ -18,6 +22,7 @@ class ServerStartupManager(
     private val jsonPath = "src/main/resources/norms/36331-e60.json"
     private val normaUrl = "https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-e60.zip"
     private val embeddedJsonPath = "src/main/resources/norms/embeeded36331-e60.json"
+    private val hybridDatabaseDir = "src/main/resources/hybrid"
     private var init = false
 
     fun serverStartup() {
@@ -93,21 +98,27 @@ class ServerStartupManager(
             }
         }
 
-
-        /*
-        if (!faissDBCreator.isFaissDatabaseExists()) {
-            println("Baza FAISS nie istnieje. Tworzenie bazy...")
-            if (!faissDBCreator.createFaissDatabase(markdownPath)) {
-                println("Błąd: Nie udało się utworzyć bazy FAISS.")
+        if (!hybridSearchManagerController.isHybridBaseExists(hybridDatabaseDir)) {
+            if(!init){
+                println("Baza nie istnieje")
+                resetServer()
                 return
+            } else {
+                hybridSearchManagerController.addCommission(embeddedJsonPath, hybridDatabaseDir)
             }
-            println("Baza FAISS utworzona.")
+
+
+        }
+        if (hybridSearchManagerController.isHybridBaseExists(hybridDatabaseDir)) {
+            //Stats.getStats(jsonPath, embeddedJsonPath)
+            println("\nBaza ok\n")
+            hybridSearchService.startSearchServer()
         }
 
-         */
-        Stats.getStats(jsonPath, embeddedJsonPath)
-        println("\nSerwer uruchomiony poprawnie!\n")
+
+
     }
+
 
 
     private fun resetServer() {
@@ -122,8 +133,18 @@ class ServerStartupManager(
             }
         }
 
+        val hybridDir = File(hybridDatabaseDir)
+        if (hybridDir.exists()) {
+            hybridDir.deleteRecursively().also { success ->
+                if (!success) {
+                    println("Błąd: Nie udało się usunąć katalogu: $hybridDatabaseDir")
+                    exitProcess(1)
+                }
+            }
+        }
         init = true
         serverStartup()
     }
+
 
 }
