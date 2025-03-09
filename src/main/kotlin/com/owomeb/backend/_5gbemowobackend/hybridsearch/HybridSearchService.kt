@@ -19,23 +19,41 @@ class HybridSearchService {
     val isServerReady = _isServerReady.asStateFlow()
 
 
+    fun addQuery(query: String) {
+        queryQueue.add(query)
+    }
+
     fun startSearchServer(): Map<String, String> {
         println("Uruchamiam serwer wyszukiwania w bazie hybrydowej")
 
         thread {
-            val processBuilder = ProcessBuilder(
-                "python", "src/main/resources/pythonScripts/hybridsearch/searchEngine.py"
-            )
-            processBuilder.redirectErrorStream(true)
-            processBuilder.start()
+            try {
+                val processBuilder = ProcessBuilder(
+                    "python", "src/main/resources/pythonScripts/hybridsearch/serverSearch.py"
+                )
+                processBuilder.redirectErrorStream(true)
+
+                val process = processBuilder.start()
+                val reader = process.inputStream.bufferedReader()
+
+                //  logi spring
+                reader.useLines { lines -> lines.forEach { println("[PYTHON SERVER] $it") } }
+
+                val exitCode = process.waitFor()
+                println(" Serwer zakończył działanie z kod: $exitCode")
+
+            } catch (e: Exception) {
+                println(" Błąd : ${e.message}")
+            }
         }
 
         return mapOf("status" to "STARTED", "message" to "Serwer wyszukiwania został uruchomiony w tle.")
     }
 
+
     @PostMapping("/search-server-ready")
     fun searchServerReady(): Map<String, String> {
-        println(" Serwer wyszukiwania w bazie hybrydowej jest gotowy!")
+        println("Serwer bazy hybrydowej gotowy")
         _isServerReady.value = true
 
         processQueryQueue()
@@ -55,11 +73,9 @@ class HybridSearchService {
         }
     }
 
-    /**
-     * Przetwarza kolejkę zapytań, gdy serwer wyszukiwania jest gotowy.
-     */
+
     private fun processQueryQueue() {
-        println("🚀 Rozpoczynam przetwarzanie kolejki zapytań...")
+        println(" Rozpoczynam przetwarzanie kolejki zapytań...")
         val iterator = queryQueue.iterator()
 
         while (iterator.hasNext()) {
@@ -67,35 +83,36 @@ class HybridSearchService {
             val response = sendQueryToPython(query)
 
             if (response["status"] == "OK") {
-                iterator.remove() // Usuwamy zapytanie tylko po otrzymaniu odpowiedzi
+                iterator.remove()
             }
         }
     }
 
-    /**
-     * Wysyła zapytanie do serwera Pythona
-     */
+
     private fun sendQueryToPython(query: String): Map<String, String> {
         return try {
             val url = URL("http://localhost:5001/search")
             val connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "POST"
             connection.doOutput = true
+            connection.setRequestProperty("Content-Type", "application/json")
+
 
             val requestBody = """{"query": "$query"}""".toByteArray()
             connection.outputStream.write(requestBody)
             connection.outputStream.flush()
 
             val responseCode = connection.responseCode
+            println("query has been sent")
             if (responseCode == 200) {
-                println("✅ Otrzymano odpowiedź z serwera wyszukiwania dla zapytania: $query")
+                println(" Otrzymano odpowiedź z serwera wyszukiwania dla zapytania: $query")
                 mapOf("status" to "OK", "message" to "Zapytanie przetworzone.")
             } else {
-                println("⚠️ Serwer wyszukiwania zwrócił błąd: $responseCode")
+                println(" Serwer wyszukiwania zwrócił błąd: $responseCode")
                 mapOf("status" to "ERROR", "message" to "Błąd po stronie serwera wyszukiwania.")
             }
         } catch (e: Exception) {
-            println("❌ Błąd podczas komunikacji z serwerem wyszukiwania: ${e.message}")
+            println(" Błąd podczas komunikacji z serwerem wyszukiwania: ${e.message}")
             mapOf("status" to "ERROR", "message" to "Błąd komunikacji z serwerem wyszukiwania.")
         }
     }

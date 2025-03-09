@@ -3,18 +3,15 @@ import sqlite3
 import json
 import numpy as np
 import os
-import traceback
-from flask import Flask, request, jsonify
-
-app = Flask(__name__)
 
 # Stałe ścieżki do plików
+JSON_PATH = r"C:\gitRepositories\5GBemowo-Backend\src\main\resources\norms\embeeded36331-e60.json"
 DB_DIR = "data"
 DB_PATH = os.path.join(DB_DIR, "hybrid_db.sqlite")
 FAISS_INDEX_PATH = os.path.join(DB_DIR, "hybrid_db.index")
 
 
-def create_hybrid_database(json_path):
+def create_hybrid_database():
     print("=== Rozpoczynam tworzenie bazy hybrydowej ===")
 
     # Tworzenie katalogu na pliki, jeśli nie istnieje
@@ -23,24 +20,23 @@ def create_hybrid_database(json_path):
         os.makedirs(DB_DIR)
 
     # Sprawdzenie czy plik JSON istnieje
-    if not os.path.exists(json_path):
-        print(f"Błąd: Plik JSON '{json_path}' nie istnieje")
-        return {"status": "error", "message": f"Plik JSON '{json_path}' nie istnieje"}
+    if not os.path.exists(JSON_PATH):
+        print(f"Błąd: Plik JSON '{JSON_PATH}' nie istnieje")
+        return
 
-    print(f"Wczytywanie danych z pliku JSON: {json_path}")
+    print(f"Wczytywanie danych z pliku JSON: {JSON_PATH}")
 
     try:
-        with open(json_path, "r", encoding="utf-8") as f:
+        with open(JSON_PATH, "r", encoding="utf-8") as f:
             data = json.load(f)
     except Exception as e:
         print(f"Błąd podczas wczytywania JSON: {e}")
-        print(traceback.format_exc())  # Pełny traceback błędu
-        return {"status": "error", "message": f"Błąd wczytywania JSON: {e}"}
+        return
 
     # Sprawdzanie czy struktura JSON jest poprawna
     if "fragments" not in data:
         print("Błąd: JSON nie zawiera klucza 'fragments'. Sprawdź strukturę pliku.")
-        return {"status": "error", "message": "JSON nie zawiera klucza 'fragments'"}
+        return
 
     sentences = []
     embeddings = []
@@ -50,8 +46,7 @@ def create_hybrid_database(json_path):
     for entry in data["fragments"]:
         if "content" not in entry or "embeddedContent" not in entry:
             print("Błąd: Brak wymaganych pól ('content' lub 'embeddedContent') w JSON")
-            return {"status": "error", "message": "Brak wymaganych pól w JSON"}
-
+            return
         sentences.append(entry["content"])
         embeddings.append(entry["embeddedContent"])
 
@@ -59,7 +54,7 @@ def create_hybrid_database(json_path):
 
     if len(embeddings) == 0:
         print("Błąd: Brak embeddingów w pliku JSON")
-        return {"status": "error", "message": "Brak embeddingów w JSON"}
+        return
 
     dimension = embeddings.shape[1]
     print(f"Liczba zdań: {len(sentences)}, Wymiar embeddingów: {dimension}")
@@ -68,23 +63,12 @@ def create_hybrid_database(json_path):
     print("Tworzenie indeksu FAISS...")
     try:
         index = faiss.IndexFlatL2(dimension)
-
-        if not index.is_trained:
-            print("Błąd: FAISS IndexFlatL2 nie został prawidłowo zainicjalizowany!")
-            return {"status": "error", "message": "FAISS IndexFlatL2 nie został poprawnie utworzony"}
-
         index.add(embeddings)
-
-        # Usunięcie starego indeksu jeśli istnieje
-        if os.path.exists(FAISS_INDEX_PATH):
-            os.remove(FAISS_INDEX_PATH)
-
         faiss.write_index(index, FAISS_INDEX_PATH)
         print(f"Indeks FAISS zapisany do: {FAISS_INDEX_PATH}")
     except Exception as e:
         print(f"Błąd podczas tworzenia FAISS: {e}")
-        print(traceback.format_exc())
-        return {"status": "error", "message": f"Błąd FAISS: {e}"}
+        return
 
     # Tworzenie SQLite
     print("Sprawdzanie bazy SQLite...")
@@ -95,8 +79,7 @@ def create_hybrid_database(json_path):
             os.remove(DB_PATH)
         except Exception as e:
             print(f"Błąd podczas usuwania starej bazy SQLite: {e}")
-            print(traceback.format_exc())
-            return {"status": "error", "message": f"Błąd usuwania SQLite: {e}"}
+            return
 
     try:
         print(f"Tworzenie nowej bazy danych SQLite: {DB_PATH}")
@@ -115,30 +98,10 @@ def create_hybrid_database(json_path):
         print(f"Baza SQLite zapisana: {DB_PATH}")
     except Exception as e:
         print(f"Błąd podczas tworzenia bazy SQLite: {e}")
-        print(traceback.format_exc())
-        return {"status": "error", "message": f"Błąd SQLite: {e}"}
+        return
 
     print("=== Proces zakończony pomyślnie ===")
-    return {"status": "success", "message": "Baza hybrydowa utworzona pomyślnie"}
 
 
-# === Endpoint Flask do uruchamiania funkcji ===
-@app.route("/create_hybrid_db", methods=["POST"])
-def api_create_hybrid_db():
-    try:
-        data = request.json
-        if "json_path" not in data:
-            return jsonify({"status": "error", "message": "Brak klucza 'json_path' w zapytaniu"}), 400
-
-        json_path = data["json_path"]
-        response = create_hybrid_database(json_path)
-        return jsonify(response)
-
-    except Exception as e:
-        print(f"Błąd w API: {e}")
-        print(traceback.format_exc())
-        return jsonify({"status": "error", "message": f"Błąd serwera: {e}"}), 500
-
-
-if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+# Uruchomienie funkcji
+create_hybrid_database()

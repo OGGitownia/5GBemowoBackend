@@ -8,6 +8,8 @@ from flask import Flask, request, jsonify
 from whoosh.index import open_dir
 from whoosh.qparser import QueryParser
 
+
+sys.stdout.reconfigure(encoding='utf-8')
 # Ustawienia
 HYBRID_DB_PATH = "C:/gitRepositories/5GBemowo-Backend/src/main/resources/hybrid"
 

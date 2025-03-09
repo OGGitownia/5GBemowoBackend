@@ -99,24 +99,17 @@ class ServerStartupManager(
         }
 
         if (!hybridSearchManagerController.isHybridBaseExists(hybridDatabaseDir)) {
-            if(!init){
-                println("Baza nie istnieje")
-                resetServer()
-                return
-            } else {
-                hybridSearchManagerController.addCommission(embeddedJsonPath, hybridDatabaseDir)
-            }
-
-
+            hybridSearchManagerController.addCommission(embeddedJsonPath, hybridDatabaseDir)
         }
         if (hybridSearchManagerController.isHybridBaseExists(hybridDatabaseDir)) {
             //Stats.getStats(jsonPath, embeddedJsonPath)
             println("\nBaza ok\n")
             hybridSearchService.startSearchServer()
         }
+        hybridSearchService.addQuery("What is the purpose of RRCConnectionRequest?")
 
 
-
+        com.owomeb.backend._5gbemowobackend.pythonServerModel.main()
     }
 
 
