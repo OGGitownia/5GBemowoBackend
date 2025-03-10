@@ -11,8 +11,7 @@ import java.net.URL
 
 @Component
 class LlamaShutdownManager(private val flaskServerService: FlaskServerService,
-                           private val hybridSearchManagerController: HybridSearchManagerController,
-                           private val hybridSearchService: HybridSearchService) : DisposableBean {
+                           private val hybridSearchManagerController: HybridSearchManagerController) : DisposableBean {
 
     override fun destroy() {
         println("\n=== Zamykanie modelu Llama 3.1... ===\n")
@@ -34,11 +33,6 @@ class LlamaShutdownManager(private val flaskServerService: FlaskServerService,
         println(" Zatrzymywanie servisu Toyoty")
 
         hybridSearchManagerController.shutdownServer()
-    }
-    fun stopHybridSearchEngine(){
-        println("Zatrzymywanie search engine")
-
-        hybridSearchService.shutdownServer()
     }
 
     private fun stopLlama() {

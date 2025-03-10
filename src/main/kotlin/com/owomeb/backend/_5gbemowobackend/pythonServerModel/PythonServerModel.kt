@@ -10,6 +10,9 @@ import java.net.ServerSocket
 import java.net.URL
 import kotlin.concurrent.thread
 
+
+
+/// potomków oznaczać @Service i @RestController
 abstract class PythonServerModel<T>(
     private val scriptPath: String,
     serverName: String? = null,
@@ -28,9 +31,7 @@ abstract class PythonServerModel<T>(
 
     init {
         ListOfAllActiveInnerServers.registerServer(this)
-        CoroutineScope(Dispatchers.Default).launch {
-            queue.collect { processQueueIfNeeded() }
-        }
+
     }
 
     private fun startServer() {
@@ -86,6 +87,8 @@ abstract class PythonServerModel<T>(
         // Zapisujemy rzeczywisty port
         actualPort = port
 
+        println(serverName)
+
         isServerReady = true
         processQueueIfNeeded()
 
@@ -95,6 +98,7 @@ abstract class PythonServerModel<T>(
 
     fun addToQueue(item: T) {
         _queue.value += item
+        processQueueIfNeeded()
     }
 
     private fun processQueueIfNeeded() {
@@ -102,6 +106,7 @@ abstract class PythonServerModel<T>(
             if (isServerReady) {
                 processQueue()
             } else {
+                println("Próba startu")
                 startServer()
             }
         } else if (autoClose && isServerReady) {
@@ -121,6 +126,8 @@ abstract class PythonServerModel<T>(
     }
 
     private fun sendRequestToPython(item: T, callback: (String) -> Unit) {
+        println(URL("http://localhost:$actualPort/$serverName/process"))
+        println(isServerReady)
         thread {
             try {
                 val url = URL("http://localhost:$actualPort/$serverName/process")

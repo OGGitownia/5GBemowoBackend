@@ -104,12 +104,12 @@ class ServerStartupManager(
         if (hybridSearchManagerController.isHybridBaseExists(hybridDatabaseDir)) {
             //Stats.getStats(jsonPath, embeddedJsonPath)
             println("\nBaza ok\n")
-            hybridSearchService.startSearchServer()
+            hybridSearchService.addToQueue("What is the purpose of RRCConnectionRequest?")
         }
-        hybridSearchService.addQuery("What is the purpose of RRCConnectionRequest?")
 
 
-        com.owomeb.backend._5gbemowobackend.pythonServerModel.main()
+
+        ///com.owomeb.backend._5gbemowobackend.pythonServerModel.main()
     }
 
 
