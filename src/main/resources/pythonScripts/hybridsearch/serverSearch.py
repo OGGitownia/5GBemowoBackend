@@ -9,6 +9,9 @@ import socket
 import time
 import threading
 from flask import Flask, request, jsonify
+import sys
+
+sys.stdout.reconfigure(encoding='utf-8')
 
 # Pobranie nazwy serwera i portu
 server_name = sys.argv[1] if len(sys.argv) > 1 else "HybridSearchServer"
@@ -84,19 +87,28 @@ def search_faiss(query_text, num_results=3):
 @app.route(f'/{server_name}/process', methods=['POST'])
 def process_request():
     try:
-        data = request.get_json()
-        query_text = data.get("data", "").strip()
+        print("📥 Odebrano zapytanie do serwera!")
 
-        if not query_text:
+        # Odbieramy dane jako surowy tekst (bo Spring Boot wysyła go bezpośrednio)
+        raw_data = request.data.decode("utf-8").strip()
+        print(f"📦 Otrzymany tekst: {raw_data}")
+
+        # Jeśli otrzymaliśmy pusty string, zwracamy błąd
+        if not raw_data:
             return jsonify({"error": "Zapytanie nie może być puste"}), 400
 
-        num_results = int(data.get("num_results", 3))
-        results = search_faiss(query_text, num_results)
+        # Wyszukujemy wyniki w FAISS na podstawie czystego stringa
+        print(f"🔍 Wyszukiwanie dla zapytania: '{raw_data}'")
+        results = search_faiss(raw_data)
+
         return jsonify({"results": results}), 200
+
     except Exception as e:
-        print(f"BŁĄD przetwarzania zapytania: {e}")
+        print(f"❌ BŁĄD przetwarzania zapytania: {e}")
         print(traceback.format_exc())
         return jsonify({"error": f"Błąd serwera: {e}"}), 500
+
+
 
 @app.route(f'/{server_name}/shutdown', methods=['POST'])
 def shutdown():

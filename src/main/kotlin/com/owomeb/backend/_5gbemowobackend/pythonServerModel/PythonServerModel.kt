@@ -1,6 +1,6 @@
 package com.owomeb.backend._5gbemowobackend.pythonServerModel
 
-import kotlinx.coroutines.*
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.flow.*
 import org.springframework.context.ApplicationListener
 import org.springframework.context.event.ContextClosedEvent
@@ -11,8 +11,6 @@ import java.net.URL
 import kotlin.concurrent.thread
 
 
-
-/// potomków oznaczać @Service i @RestController
 abstract class PythonServerModel<T>(
     private val scriptPath: String,
     serverName: String? = null,
@@ -80,14 +78,13 @@ abstract class PythonServerModel<T>(
     }
 
 
-    @PostMapping("/{serverName}/server-ready")
+    @PostMapping("/server-ready")
     fun markServerAsReady(@RequestBody body: Map<String, Any>): Map<String, String> {
         val port = body["port"] as? Int ?: return mapOf("status" to "ERROR", "message" to "Brak portu w żądaniu!")
 
         // Zapisujemy rzeczywisty port
         actualPort = port
 
-        println(serverName)
 
         isServerReady = true
         processQueueIfNeeded()
@@ -118,7 +115,7 @@ abstract class PythonServerModel<T>(
         if (_queue.value.isNotEmpty()) {
             val item = _queue.value.first()
             sendRequestToPython(item) { result ->
-                publishResult(result)
+                publishResult(result, item)
                 _queue.value = _queue.value.drop(1)
                 processQueueIfNeeded()
             }
@@ -126,8 +123,6 @@ abstract class PythonServerModel<T>(
     }
 
     private fun sendRequestToPython(item: T, callback: (String) -> Unit) {
-        println(URL("http://localhost:$actualPort/$serverName/process"))
-        println(isServerReady)
         thread {
             try {
                 val url = URL("http://localhost:$actualPort/$serverName/process")
@@ -136,8 +131,12 @@ abstract class PythonServerModel<T>(
                 connection.doOutput = true
                 connection.setRequestProperty("Content-Type", "application/json")
 
-                val requestBody = """{"data": "$item"}""".toByteArray()
-                connection.outputStream.write(requestBody)
+                val objectMapper = jacksonObjectMapper()
+                val requestBody = objectMapper.writeValueAsString(item)
+
+                println("Was sent --")
+                println(requestBody)
+                connection.outputStream.write(requestBody.toByteArray(Charsets.UTF_8))
                 connection.outputStream.flush()
 
                 val responseCode = connection.responseCode
@@ -154,7 +153,9 @@ abstract class PythonServerModel<T>(
         }
     }
 
-    open fun publishResult(result: String) {
+
+    open fun publishResult(result: String, item: T) {
+        println("Item was: $result")
         println("Wynik przetwarzania z serwera $serverName: $result")
     }
 
