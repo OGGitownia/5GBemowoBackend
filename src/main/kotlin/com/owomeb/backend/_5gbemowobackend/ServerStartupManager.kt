@@ -3,6 +3,7 @@ package com.owomeb.backend._5gbemowobackend
 import com.owomeb.backend._5gbemowobackend.baseCreators.*
 import com.owomeb.backend._5gbemowobackend.hybridsearch.HybridSearchManagerController
 import com.owomeb.backend._5gbemowobackend.hybridsearch.HybridSearchService
+import com.owomeb.backend._5gbemowobackend.lamoServices.LlamaService
 import org.springframework.stereotype.Component
 import java.io.File
 import kotlin.system.exitProcess
@@ -14,12 +15,14 @@ class ServerStartupManager(
     private val markDownManager: MarkdownManager,
     private val embeddingManager: EmbeddingManager,
     private val hybridSearchManagerController: HybridSearchManagerController,
-    private val hybridSearchService: HybridSearchService
+    private val hybridSearchService: HybridSearchService,
+    private val llamaService: LlamaService
 ) {
     private val zipPath = "src/main/resources/norms/norma.zip"
     private val markdownPath = "src/main/resources/norms/36331-e60.md"
     private val docPath = "src/main/resources/norms/36331-e60.doc"
     private val jsonPath = "src/main/resources/norms/36331-e60.json"
+    private val jsonPath2 = "src/main/resources/norms/36331-e60.json2"
     private val normaUrl = "https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-e60.zip"
     private val embeddedJsonPath = "src/main/resources/norms/embeeded36331-e60.json"
     private val hybridDatabaseDir = "src/main/resources/hybrid"
@@ -31,30 +34,29 @@ class ServerStartupManager(
 
         if (!normaManager.isNormaDownloaded(docPath)) {
             if(!init){
-                println("Plik normy 3GPP nie istnieje. Czyszczenie serwera i pobieranie...")
+                println("Plik normy 3GPP nie istnieje")
                 resetServer()
                 return
             }
             if (!normaManager.downloadAndExtractNorm(normaUrl, zipPath, docPath)) {
-                println("Błąd: Nie udało się pobrać normy 3GPP.")
+                println("Errororr: Nie udało się pobrać normy 3GPP")
                 exitProcess(1)
             }
-            println("Norma 3GPP pobrana i rozpakowana.")
+            println("Norma 3GPP pobrana i rozpakowana")
         }
 
 
         if (!jsonManager.isJsonExists(jsonPath)) {
+            println("Brak pliku JSON z chunk")
             if (!init) {
-                println("Brak pliku JSON. Czyszczenie serwera...")
                 resetServer()
                 return
             } else {
-                println("JSON nie istnieje. Tworzenie JSON...")
                 if (!jsonManager.createJson(docPath, jsonPath)) {
-                    println("Błąd: Nie udało się utworzyć JSON.")
+                    println("Błąd: Nie udało się utworzyć pliku JSON z chunk")
                     exitProcess(1)
                 }
-                println("JSON utworzony.")
+                println("JSON utworzony")
             }
         }
 
@@ -105,7 +107,23 @@ class ServerStartupManager(
             //Stats.getStats(jsonPath, embeddedJsonPath)
             println("\nBaza ok\n")
             hybridSearchService.addToQueue("What is the purpose of RRCConnectionRequest?")
+            val contexts = listOf(
+                    "",
+            "Opis śmierci przedstawiony w Boskiej Komedii Dantego Alighieri.",
+            "Ciekawostka o sarnach: Sarny potrafią komunikować się za pomocą dźwięków, w tym ostrzegawczych gwizdów."
+            )
+
+            val questions = listOf(
+                "cześć jak się masz moja droga llamo?",
+                "Jak Dante opisuje piekło w Boskiej Komedii i jakie są jego najcięższe kary?",
+                "W jaki sposób sarny komunikują się w stadzie i jakie dźwięki wydają?"
+            )
+            for (i in contexts.indices) {
+                //llamaService.addToQueue(questions[i], contexts[i])
+            }
         }
+
+       // jsonManager.processDocToTxt(docPath, jsonPath2)
 
 
 

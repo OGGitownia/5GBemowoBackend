@@ -1,13 +1,10 @@
-package com.owomeb.backend._5gbemowobackend.random
+package com.owomeb.backend._5gbemowobackend.lamoServices
 
 import com.owomeb.backend._5gbemowobackend.baseCreators.FlaskServerService
 import com.owomeb.backend._5gbemowobackend.hybridsearch.HybridSearchManagerController
-import com.owomeb.backend._5gbemowobackend.hybridsearch.HybridSearchService
 import org.springframework.stereotype.Component
 import org.springframework.beans.factory.DisposableBean
 import java.io.*
-import java.net.HttpURLConnection
-import java.net.URL
 
 @Component
 class LlamaShutdownManager(private val flaskServerService: FlaskServerService,
@@ -49,10 +46,10 @@ class LlamaShutdownManager(private val flaskServerService: FlaskServerService,
             }
 
             process.waitFor()
-            println("\n✅ Model Llama został zamknięty i VRAM zwolniony.\n")
+            println("Model Llama został zamknięty i VRAM zwolniony.\n")
 
         } catch (e: IOException) {
-            println("❌ Błąd podczas zamykania modelu: ${e.message}")
+            println(" Błąd podczas zamykania modelu: ${e.message}")
         }
     }
 }

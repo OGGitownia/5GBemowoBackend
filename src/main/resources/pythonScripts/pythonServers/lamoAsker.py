@@ -22,14 +22,22 @@ llama_model = None
 def init_model():
     global llama_model
     print("Ładowanie modelu lamy")
-    llama_model = Llama(model_path=MODEL_PATH)
+    llama_model = Llama(
+        model_path=MODEL_PATH,
+        n_gpu_layers=26,  # Liczba warstw przeniesiona na GPU
+        main_gpu=0,  # Użyj pierwszego dostępnego GPU
+        tensor_split=[1.0],  # Cały VRAM dostępny dla modelu
+        n_batch=512
+    )
     threading.Thread(target=notify_spring_boot, daemon=True).start()
 
 threading.Thread(target=init_model, daemon=True).start()
 
+
+
 def notify_spring_boot():
-    print("POWIAWAMIAM_ZA_15", flush=True)
-    time.sleep(15)
+    print("POWIAWAMIAM_ZA_5", flush=True)
+    time.sleep(5)
     print("POWIAWAMIAM_ZA_0", flush=True)
     try:
         response = requests.post(SPRING_BOOT_READY_URL, json={"server_name": server_name, "port": port})
@@ -68,18 +76,21 @@ def process_request():
 
 
 def generate_response(context, question):
+    print("context: ", context, flush=True)
+    print("questiion: ", question, flush=True)
     print("Próba generowania odp", flush=True)
     if not llama_model:
         return "Model nie jest jeszcze załadowany!"
     print("Model był", flush=True)
-    full_prompt = f"Kontekst: {context}\nPytanie: {question}\nOdpowiedź:"
+    full_prompt = f"Kontekst: {question}\nPytanie: {question}\nOdpowiedź:"
 
     print("Wysyłanie zapytania do modelu AI", flush=True)
-    #result = llama_model(full_prompt, max_tokens=200)
-    #answer = result["choices"][0]["text"] if "choices" in result else " Błąd generacji odpowiedzi!"
+    result = llama_model(full_prompt, max_tokens=200)
+    time.sleep(5)
+    answer = result["choices"][0]["text"] if "choices" in result else " Błąd generacji odpowiedzi!"
 
     print(f" Odpowiedź modelu: , flush=True)", flush=True)
-    return "answer"
+    return answer
 
 @app.route(f'/{server_name}/shutdown', methods=['POST'])
 def shutdown():

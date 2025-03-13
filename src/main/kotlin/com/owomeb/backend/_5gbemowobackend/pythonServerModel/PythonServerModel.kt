@@ -116,6 +116,7 @@ abstract class PythonServerModel<T>(
             val item = _queue.value.first()
             sendRequestToPython(item) { result ->
                 publishResult(result, item)
+                ////
                 _queue.value = _queue.value.drop(1)
                 processQueueIfNeeded()
             }
@@ -155,7 +156,7 @@ abstract class PythonServerModel<T>(
 
 
     open fun publishResult(result: String, item: T) {
-        println("Item was: $result")
+        println("Item was: $item")
         println("Wynik przetwarzania z serwera $serverName: $result")
     }
 

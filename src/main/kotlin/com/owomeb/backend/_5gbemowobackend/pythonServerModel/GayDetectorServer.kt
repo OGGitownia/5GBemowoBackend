@@ -12,6 +12,6 @@ data class NumberPair(val a: Int, val b: Int)
 
 class SumCalculatorServer(serverName: String? = null) : PythonServerModel<NumberPair>("src/main/resources/pythonScripts/pythonServers/SumCalculator.py", serverName) {
     override fun publishResult(result: String, item: NumberPair) {
-        println("📌 [SumCalculatorServer] Wynik: $result")
+        println(" [SumCalculatorServer] Wynik: $result")
     }
 }

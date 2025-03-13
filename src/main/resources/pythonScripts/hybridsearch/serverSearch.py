@@ -72,7 +72,6 @@ def text_to_embedding(text, dimension):
     return np.random.rand(dimension).astype("float32")
 
 def search_faiss(query_text, num_results=3):
-    """Wykonuje wyszukiwanie w FAISS"""
     print(f"Wyszukiwanie FAISS dla: {query_text} (top-{num_results} wyników)")
 
     if faiss_index is None or documents is None:

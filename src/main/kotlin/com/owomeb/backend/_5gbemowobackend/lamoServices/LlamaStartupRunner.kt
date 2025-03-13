@@ -1,8 +1,18 @@
-package com.owomeb.backend._5gbemowobackend.random
+package com.owomeb.backend._5gbemowobackend.lamoServices
 
-/*
+import org.springframework.boot.CommandLineRunner
+import org.springframework.stereotype.Component
+import java.io.BufferedReader
+import java.io.File
+import java.io.IOException
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.URL
+import kotlin.concurrent.thread
+
+
 @Component
-class LlamaStartupRunner : CommandLineRunner {
+class LlamaStartupRunner(val llamaService: LlamaService) : CommandLineRunner {
 
     private val serverPath = "C:\\Users\\Pc\\llama.cpp\\build-cuda\\bin\\Release\\llama-server.exe"
 
@@ -12,11 +22,10 @@ class LlamaStartupRunner : CommandLineRunner {
 
     override fun run(vararg args: String?) {
         println("\n=== Sprawdzanie serwera Llama 3 ===\n")
-
         if (isServerRunning()) {
-            println("✅ Serwer Llama 3 już działa!")
+            println("Serwer Llama 3 działa!")
         } else {
-            println("⚠️ Serwer Llama 3 nie działa. Uruchamiam...")
+            println("Serwer Llama 3 nie działa. Uruchamiam go terazzz")
             startLlamaServer()
         }
     }
@@ -38,7 +47,7 @@ class LlamaStartupRunner : CommandLineRunner {
 
     private fun startLlamaServer() {
         val processBuilder = ProcessBuilder(
-            "cmd.exe", "/c", "\"$serverPath\" -m \"$modelPath\" --n-gpu-layers 30 --host 127.0.0.1 --port 8081"
+            "cmd.exe", "/c", "\"$serverPath\" -m \"$modelPath\" --n-gpu-layers 26 --host 127.0.0.1 --port 8081"
         )
 
 
@@ -46,17 +55,17 @@ class LlamaStartupRunner : CommandLineRunner {
         processBuilder.redirectErrorStream(true)
 
         try {
-            thread { // Uruchamiamy serwer w osobnym wątku, żeby nie blokować aplikacji
+            thread {
                 val process = processBuilder.start()
                 val reader = BufferedReader(InputStreamReader(process.inputStream))
 
-                println("🚀 Serwer Llama 3 uruchomiony. Oczekiwanie na gotowość...")
+                println("Serwer Llama 3 uruchomiony. gotuje się")
 
                 var line: String?
                 while (reader.readLine().also { line = it } != null) {
                     println(line)
                     if (line!!.contains("listening on")) {
-                        println("✅ Serwer gotowy do użycia!")
+                        llamaService.ready = true
                         break
                     }
                 }
@@ -64,9 +73,9 @@ class LlamaStartupRunner : CommandLineRunner {
                 process.waitFor()
             }
         } catch (e: IOException) {
-            println("❌ Błąd uruchamiania serwera: ${e.message}")
+            println("Błąd: ${e.message}")
         }
     }
 }
 
- */
+

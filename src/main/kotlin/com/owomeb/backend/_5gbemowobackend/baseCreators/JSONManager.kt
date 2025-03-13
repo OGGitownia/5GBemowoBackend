@@ -1,5 +1,10 @@
 package com.owomeb.backend._5gbemowobackend.baseCreators
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.apache.poi.hwpf.HWPFDocument
 import org.apache.poi.hwpf.usermodel.Range
 import org.apache.poi.hwpf.usermodel.Table
@@ -7,12 +12,11 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument
 import org.apache.poi.xwpf.usermodel.XWPFTable
 import org.springframework.stereotype.Component
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileWriter
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import kotlin.system.exitProcess
 
 @Component
@@ -39,7 +43,7 @@ class JSONManager {
     }
 
     fun createJson(docPath: String, jsonPath: String): Boolean {
-        if (overlapPercentage == 100) {
+        if (overlapPercentage >= 100) {
             println("Takie jaja to nie z nami.")
             exitProcess(1)
         }
@@ -47,7 +51,7 @@ class JSONManager {
         return try {
             val file = File(docPath)
             if (!file.exists()) {
-                println("Błąd: Plik DOC nie istnieje.")
+                println("Błąd: Plik DOC nie istnieje")
                 return false
             }
 
@@ -251,6 +255,51 @@ class JSONManager {
         statsFile.writeText(statsText)
         println("📊 Statystyki zapisane do: ${statsFile.absolutePath}")
     }
+
+
+    fun processDocToTxt(documentPath: String, outputPath: String) {
+        // Otwieramy plik .doc
+        val document = HWPFDocument(FileInputStream(documentPath))
+        val range: Range = document.range
+
+        val writer = FileWriter(File(outputPath))
+
+        var currentTitle = ""
+        val currentContent = StringBuilder()
+
+        for (i in 0 until range.numParagraphs()) {
+            val paragraph = range.getParagraph(i).text().trim()
+            if (paragraph.isEmpty()) continue
+
+            // Sprawdzamy, czy paragraf wygląda jak tytuł rozdziału (np. "5.3.9 RRC connection release requested by upper layers")
+            val chapterPattern = Regex("^\\d+(\\.\\d+)*\\s+.+")
+            if (chapterPattern.matches(paragraph)) {
+                // Jeśli mamy nowy tytuł, zapisujemy poprzedni fragment
+                if (currentTitle.isNotEmpty() && currentContent.isNotEmpty()) {
+                    writer.write("===== $currentTitle =====\n")
+                    writer.write(currentContent.toString().trim() + "\n\n")
+                    currentContent.clear()
+                }
+                currentTitle = paragraph
+            } else {
+                // Dodajemy paragraf do aktualnego fragmentu
+                currentContent.append(paragraph).append("\n")
+            }
+        }
+
+        // Dodajemy ostatni rozdział do pliku
+        if (currentTitle.isNotEmpty() && currentContent.isNotEmpty()) {
+            writer.write("===== $currentTitle =====\n")
+            writer.write(currentContent.toString().trim() + "\n\n")
+        }
+
+        // Zamykamy dokument i plik wyjściowy
+        document.close()
+        writer.close()
+
+        println("Przetworzono dokument i zapisano wynik do: $outputPath")
+    }
+
 }
 
 @Serializable
