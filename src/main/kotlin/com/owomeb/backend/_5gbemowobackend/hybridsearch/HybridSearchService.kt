@@ -20,7 +20,6 @@ class HybridSearchService(
 
 
     override fun publishResult(result: String, item: String) {
-        super.publishResult(result, item)
 
         val cleanResult = try {
             val json = JSONObject(result)
@@ -37,8 +36,7 @@ class HybridSearchService(
             "Błąd parsowania JSON: ${e.message}"
         }
 
-        println("Piastów $item")
-        println("Piastów $cleanResult")
+        println("Result of hybrid search for: $item  is  \n $cleanResult")
 
         llamaService.addToQueue(item, cleanResult)
     }

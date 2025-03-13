@@ -3,7 +3,7 @@ package com.owomeb.backend._5gbemowobackend.pythonServerModel
 // Klasa do przetwarzania pytania "Are you gay?"
 class GayDetectorServer(serverName: String? = null) : PythonServerModel<String>("src/main/resources/pythonScripts/pythonServers/GayDetector.py", serverName) {
     override fun publishResult(result: String, item: String) {
-        println("📌 [GayDetectorServer] Wynik: $result")
+        println("[GayDetectorServer] Wynik: $result")
     }
 }
 

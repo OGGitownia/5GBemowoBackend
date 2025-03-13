@@ -10,7 +10,7 @@ import java.io.InputStreamReader
 class LlamaShutdownRunner : ApplicationListener<ContextClosedEvent> {
 
     override fun onApplicationEvent(event: ContextClosedEvent) {
-        println("\n=== Aplikacja się zamyka, zatrzymuję serwer Llama 3... ===\n")
+        println("\n Aplikacja próbuje się zamykać\n")
         stopLlamaServer()
     }
 
@@ -29,7 +29,7 @@ class LlamaShutdownRunner : ApplicationListener<ContextClosedEvent> {
                 }
             }
 
-            println("ℹNie znaleziono działającego procesu Llama 3.")
+            println("Nie znaleziono działającej Llama 3.")
 
         } catch (e: Exception) {
             println("Błąd przy zatrzymywaniu serwera: ${e.message}")

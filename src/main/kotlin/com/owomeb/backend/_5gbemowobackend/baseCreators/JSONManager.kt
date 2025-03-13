@@ -195,7 +195,6 @@ class JSONManager {
                 isInsideTable = true
                 text.append("| ").append(paragraph.text().trim()).append(" |\n")
             } else if (isInsideTable) {
-                // Koniec tabeli, przerywamy
                 break
             }
         }
@@ -253,12 +252,11 @@ class JSONManager {
         """.trimIndent()
 
         statsFile.writeText(statsText)
-        println("📊 Statystyki zapisane do: ${statsFile.absolutePath}")
+        println("Statystyki zapisane do: ${statsFile.absolutePath}")
     }
 
 
     fun processDocToTxt(documentPath: String, outputPath: String) {
-        // Otwieramy plik .doc
         val document = HWPFDocument(FileInputStream(documentPath))
         val range: Range = document.range
 
@@ -271,10 +269,8 @@ class JSONManager {
             val paragraph = range.getParagraph(i).text().trim()
             if (paragraph.isEmpty()) continue
 
-            // Sprawdzamy, czy paragraf wygląda jak tytuł rozdziału (np. "5.3.9 RRC connection release requested by upper layers")
             val chapterPattern = Regex("^\\d+(\\.\\d+)*\\s+.+")
             if (chapterPattern.matches(paragraph)) {
-                // Jeśli mamy nowy tytuł, zapisujemy poprzedni fragment
                 if (currentTitle.isNotEmpty() && currentContent.isNotEmpty()) {
                     writer.write("===== $currentTitle =====\n")
                     writer.write(currentContent.toString().trim() + "\n\n")
@@ -282,18 +278,15 @@ class JSONManager {
                 }
                 currentTitle = paragraph
             } else {
-                // Dodajemy paragraf do aktualnego fragmentu
                 currentContent.append(paragraph).append("\n")
             }
         }
 
-        // Dodajemy ostatni rozdział do pliku
         if (currentTitle.isNotEmpty() && currentContent.isNotEmpty()) {
             writer.write("===== $currentTitle =====\n")
             writer.write(currentContent.toString().trim() + "\n\n")
         }
 
-        // Zamykamy dokument i plik wyjściowy
         document.close()
         writer.close()
 
@@ -308,7 +301,7 @@ data class JsonData(val fragments: MutableList<Fragment>)
 @Serializable
 data class Fragment(
     val content: String,
-    var embeddedContent: List<Float> = emptyList() // Początkowo pusta lista
+    var embeddedContent: List<Float> = emptyList()
 )
 data class Statistics(
     var totalFragments: Int = 0,

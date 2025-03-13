@@ -77,28 +77,30 @@ class FlaskServerService {
 
             while (_queue.value.isNotEmpty()) {
                 val textToProcess = _queue.value.firstOrNull() ?: continue
-                //println("🚀 Wysyłanie 1 fragmentu do serwera Flask:")
+                //println(" Wysyłanie 1 fragmentu do serwera Flask:")
 
                 println("Aktualny stan kolejki: ${getQueueSize()}")
                 if(getQueueSize() == 1300){
                     println(newJsonData)
                 }
                 try {
-                    val embedding = withContext(Dispatchers.IO) { getEmbeddings(textToProcess) } // Oczekujemy na odpowiedź
+                    val embedding = withContext(Dispatchers.IO) { getEmbeddings(textToProcess) }
 
                     if (embedding != null) {
                         newJsonData.fragments.add(Fragment(textToProcess, embedding))
-                        _queue.update { it.drop(1) } // Usuwamy przetworzony element dopiero po odpowiedzi
+                        _queue.update { it.drop(1) }
                     } else {
-                        println("⚠️ Błąd: Flask nie zwrócił poprawnych danych dla: $textToProcess")
+                        println("Błąd: Flask nie zwrócił poprawnych danych dla: $textToProcess")
+                        System.out.flush()
                     }
                 } catch (e: Exception) {
-                    println("❌ Błąd podczas komunikacji z Flask: ${e.message}")
+                    println("Błąd podczas komunikacji z Flask: ${e.message}")
+                    System.out.flush()
                 }
             }
 
             embeddedFile.writeText(Json.encodeToString(newJsonData))
-            println("✅ Zapisano nowy plik JSON: $embeddedPath")
+            println("Zapisano nowy plik JSON: $embeddedPath")
         }
     }
 
@@ -112,7 +114,6 @@ class FlaskServerService {
             processBuilder.redirectErrorStream(true)
             flaskProcess = processBuilder.start()
 
-            // Obsługa logów serwera Flask
             Executors.newSingleThreadExecutor().submit {
                 BufferedReader(InputStreamReader(flaskProcess!!.inputStream)).use { reader ->
                     var line: String?
@@ -122,7 +123,7 @@ class FlaskServerService {
                 }
             }
         } catch (e: Exception) {
-            throw RuntimeException(" Nie udało się uruchomić serwera Flask", e)
+            throw RuntimeException("Nie udało się uruchomić serwera Flask", e)
         }
         val json1 = convertQueueToJson()
 

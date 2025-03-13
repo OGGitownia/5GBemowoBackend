@@ -135,7 +135,6 @@ abstract class PythonServerModel<T>(
                 val objectMapper = jacksonObjectMapper()
                 val requestBody = objectMapper.writeValueAsString(item)
 
-                println("Was sent --")
                 println(requestBody)
                 connection.outputStream.write(requestBody.toByteArray(Charsets.UTF_8))
                 connection.outputStream.flush()

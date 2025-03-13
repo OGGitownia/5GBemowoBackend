@@ -29,6 +29,7 @@ class NormManager {
     fun downloadAndExtractNorm(normUrl: String, zipPath: String, docPath: String): Boolean {
         return try {
             val zipFile = File(zipPath)
+            zipFile.parentFile?.mkdirs()
 
             val url = URL(normUrl)
             val connection = url.openConnection() as HttpURLConnection

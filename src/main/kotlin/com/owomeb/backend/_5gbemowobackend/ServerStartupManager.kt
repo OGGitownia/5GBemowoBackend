@@ -20,9 +20,11 @@ class ServerStartupManager(
 ) {
     private val zipPath = "src/main/resources/norms/norma.zip"
     private val markdownPath = "src/main/resources/norms/36331-e60.md"
+    private val pureMarkdownPath = "src/main/resources/norms/36331-e60_pure.md"
     private val docPath = "src/main/resources/norms/36331-e60.doc"
     private val jsonPath = "src/main/resources/norms/36331-e60.json"
     private val jsonPath2 = "src/main/resources/norms/36331-e60.json2"
+    private val chunkyPath = "src/main/resources/norms/chunky.json2"
     private val normaUrl = "https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-e60.zip"
     private val embeddedJsonPath = "src/main/resources/norms/embeeded36331-e60.json"
     private val hybridDatabaseDir = "src/main/resources/hybrid"
@@ -31,7 +33,7 @@ class ServerStartupManager(
     fun serverStartup() {
         println("\n()()()()()()()(()()()()((   Uruchamianie serwera  ()()()()()()()(()()()()((\n")
 
-
+        init = true
         if (!normaManager.isNormaDownloaded(docPath)) {
             if(!init){
                 println("Plik normy 3GPP nie istnieje")
@@ -45,7 +47,26 @@ class ServerStartupManager(
             println("Norma 3GPP pobrana i rozpakowana")
         }
 
+        if (!markDownManager.isMarkdownExists(markdownPath)) {
+            if (!init) {
+                println("Markdown nie istnieje")
+                resetServer()
+                return
+            } else {
+                println("Tworzenie Markdown")
+                if (!markDownManager.convertDocToMarkdown(docPath, markdownPath, pureMarkdownPath)) {
+                    println("Błąd: Nie udało się przekonwertować DOC albo docX na Markdown")
+                    exitProcess(1)
+                }
+                println("Markdown utworzony")
+                val chunker = ChunkyChunker(pureMarkdownPath, chunkyPath)
+                chunker.findPossibleChapters()
+            }
+        }
 
+
+
+        /*
         if (!jsonManager.isJsonExists(jsonPath)) {
             println("Brak pliku JSON z chunk")
             if (!init) {
@@ -60,6 +81,8 @@ class ServerStartupManager(
             }
         }
 
+         */
+
 
         if (!embeddingManager.isEmbeddedJsonExist(embeddedJsonPath)) {
             if (!init) {
@@ -68,13 +91,13 @@ class ServerStartupManager(
                 return
             } else {
                 println("Tworzenie embedded JSON...")
-                if (!embeddingManager.generateEmbeddingsForJson(jsonPath)) {
+                if (!embeddingManager.generateEmbeddingsForJson(chunkyPath)) {
                     println("Błąd: Nie udało się przekonwertować json na json. Czysty absurd")
                     exitProcess(1)
                 }
                 /*
                 var a = embeddingManager.countFragmentsWithoutEmbedding(jsonPath)
-                Thread.sleep(10000)
+                ///Thread.sleep(10000)
                 while(a > 0){
                     a = embeddingManager.countFragmentsWithoutEmbedding(jsonPath)
                     println("FRAGMENTS without emb: ${a}")
@@ -85,28 +108,14 @@ class ServerStartupManager(
             }
         }
 
-        if (!markDownManager.isMarkdownExists(markdownPath)) {
-            if (!init) {
-                println("Markdown nie istnieje. Czyszczenie serwera...")
-                resetServer()
-                return
-            } else {
-                println("Tworzenie Markdown...")
-                if (!markDownManager.convertDocToMarkdown(docPath, markdownPath)) {
-                    println("Błąd: Nie udało się przekonwertować DOC na Markdown.")
-                    exitProcess(1)
-                }
-                println("Markdown utworzony.")
-            }
-        }
-
         if (!hybridSearchManagerController.isHybridBaseExists(hybridDatabaseDir)) {
             hybridSearchManagerController.addCommission(embeddedJsonPath, hybridDatabaseDir)
         }
         if (hybridSearchManagerController.isHybridBaseExists(hybridDatabaseDir)) {
             //Stats.getStats(jsonPath, embeddedJsonPath)
             println("\nBaza ok\n")
-            hybridSearchService.addToQueue("What is the purpose of RRCConnectionRequest?")
+            hybridSearchService.addToQueue("How is SystemInformationBlockType1-NB (SIB1-NB) scheduled in NB-IoT?")
+            hybridSearchService.addToQueue("What is the role of the schedulingInfoSIB1 field in MIB-NB?")
             val contexts = listOf(
                     "",
             "Opis śmierci przedstawiony w Boskiej Komedii Dantego Alighieri.",

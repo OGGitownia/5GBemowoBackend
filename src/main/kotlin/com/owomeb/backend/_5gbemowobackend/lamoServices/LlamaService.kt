@@ -1,5 +1,6 @@
 package com.owomeb.backend._5gbemowobackend.lamoServices
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.http.*
@@ -33,27 +34,45 @@ class LlamaService {
 
     fun addToQueue(question: String, context: String) {
         queue.add(Query(question, context))
-        log("Dodano do kolejki: \"$question\" (kontekst: \"$context\"). Aktualna długość kolejki: ${queue.size}")
+        log("Dodano do kolejki: \"$question\" Aktualna kolejka: ${queue.size}")
     }
 
     private fun processQueue() {
-                val query = queue.poll() ?: return
-                log("Przetwarzanie zapytania: \"${query.question}\"")
-                val response = askLlama(query.question, query.context)
-                log("Odpowiedź: $response")
+        val query = queue.poll() ?: return
+        log("Przetwarzanie zapytania: \"${query.question}\"")
+        val response = askLlama(query.question, query.context)
+        log(response.toString()) ///
+
+        try {
+            val objectMapper = ObjectMapper()
+            val rootNode: JsonNode = objectMapper.readTree(response)
+            val responseContent = rootNode.get("content")?.asText()?.trim() ?: "Brak treści odpowiedzi"
+
+            log("Odpowiedź: $responseContent")
+
+        } catch (e: Exception) {
+            log("Błąd parsowania odpowiedzi: ${e.message}")
+        }
+
     }
 
     fun askLlama(question: String, context: String): String {
-        log("Wysyłanie zapytania do Llama 3: \"$question\" (kontekst: \"$context\")")
+        log("Wysyłanie zapytania do Llama 3: \"$question\"")
 
         val headers = HttpHeaders().apply {
             contentType = MediaType.APPLICATION_JSON
         }
 
+        val formattedPrompt = """
+        Pytanie: $question \n
+        Kontekst:${context.split("\n").joinToString("\n- ") { it.trim() }}
+        Ważne: Odpowiedz **tylko** na podstawie dostarczonego kontekstu. 
+        **Jeśli kontekst nie zawiera odpowiednich informacji, napisz: "Brak informacji w kontekście".**""".trimIndent()
+
         val requestBody = objectMapper.writeValueAsString(
             mapOf(
-                "prompt" to "Pytanie: $question\nKontekst: $context",
-                "n_predict" to 200
+                "prompt" to formattedPrompt,
+                "n_predict" to 150
             )
         )
 
@@ -63,11 +82,12 @@ class LlamaService {
             val response: ResponseEntity<String> = restTemplate.exchange(
                 apiUrl, HttpMethod.POST, request, String::class.java
             )
-            log("Odpowiedź otrzymana! Treść: ${response.body}")
-            response.body ?: "Brak odpowiedzi od modelu."
+            response.body ?: "Brak odpowiedzi od modelu"
+
         } catch (e: Exception) {
             log("Błąd komunikacji z modelem: ${e.message}")
-            "Błąd: Nie udało się połączyć z modelem."
+            "Błąd: Nie udało się połączyć z modelem"
         }
     }
+
 }

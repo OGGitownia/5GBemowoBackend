@@ -16,7 +16,7 @@ class MarkdownManager {
         return File(markdownPath).exists()
     }
 
-    fun convertDocToMarkdown(docPath: String, markdownPath: String): Boolean {
+    fun convertDocToMarkdown(docPath: String, markdownPath: String, pureMarkdownPath: String): Boolean {
         return try {
             val file = File(docPath)
             if (!file.exists()) {
@@ -27,23 +27,89 @@ class MarkdownManager {
             val markdownContent = when {
                 docPath.endsWith(".docx") -> processDocxToMarkdown(XWPFDocument(FileInputStream(file)))
                 docPath.endsWith(".doc") -> processDocToMarkdown(HWPFDocument(FileInputStream(file)))
+
                 else -> {
                     println("Błąd: Nieobsługiwany format pliku: $docPath")
                     return false
                 }
             }
 
+
             FileOutputStream(markdownPath).use { output ->
                 output.write(markdownContent.toByteArray())
             }
-
             println("Markdown utworzony: $markdownPath")
+            cleanMarkdown(markdownPath, pureMarkdownPath)
+
             true
         } catch (e: Exception) {
             println("Błąd podczas konwersji DOC na Markdown: ${e.message}")
             false
         }
     }
+
+
+    fun cleanMarkdown(markdownPath: String, clearMarkdownPath: String) {
+        val inputFile = File(markdownPath)
+        val outputFile = File(clearMarkdownPath)
+
+        if (!inputFile.exists()) {
+            println("Plik źródłowy nie istnieje: $markdownPath")
+            return
+        }
+
+        val cleanedLines = mutableListOf<String>()
+        var isInTableOfContents = false
+        var isBeforeMainContent = true
+        val removedLines = mutableListOf<String>()
+
+        inputFile.forEachLine { line ->
+            val trimmedLine = line.trim()
+
+            // poniżej próba usnięcia spisu treści działała dobrze dla LTE RRC
+            if (trimmedLine.matches(Regex("(?i).*table of contents.*")) || trimmedLine.matches(Regex("(?i).*contents.*"))) {
+                isInTableOfContents = true
+                removedLines.add("Usunięto spis treści: $line")
+                return@forEachLine
+            }
+            if (isInTableOfContents && trimmedLine.isEmpty()) {
+                isInTableOfContents = false
+                return@forEachLine
+            }
+            if (isInTableOfContents) {
+                removedLines.add("Usunięto spis treści: $line")
+                return@forEachLine
+            }
+
+            // Usuwaniemetadanych na początku dokumentu
+            if (isBeforeMainContent) {
+                if (trimmedLine.matches(Regex("^(?i)(source|date of version|3GPP TS|ETSI|.*project.*|.*trade mark.*|©).*"))) {
+                    removedLines.add("Usunięto metadane/nagłówek: $line")
+                    return@forEachLine
+                }
+                // Jeśli znajdziemy pierwszą rzeczywistą treść dokumentu, kończymy czyszczenie
+                if (trimmedLine.matches(Regex("^\\d+(\\.\\d+)*\\s+.*"))) {
+                    isBeforeMainContent = false
+                }
+            }
+            if (trimmedLine.matches(Regex("^\\d+(\\.\\d+)*\\s+.*"))) {
+                removedLines.add("Usunięto spis treści: $line")
+                return@forEachLine
+            }
+
+            cleanedLines.add(line)
+        }
+
+        outputFile.writeText(cleanedLines.joinToString("\n"))
+        println("Markdown oczyszczony i zapisany do: $clearMarkdownPath")
+
+        if (removedLines.isNotEmpty()) {
+            println("Usunięto linie:")
+            removedLines.forEach { println(it) }
+        }
+    }
+
+
 
     private fun processDocxToMarkdown(document: XWPFDocument): String {
         val markdown = StringBuilder()
@@ -107,7 +173,7 @@ class MarkdownManager {
     }
 
     private fun Paragraph.isHeading(): Boolean {
-        return this.justification == 1 // 1 = centered, często używane na nagłówki
+        return this.justification == 1
     }
 
     private fun Paragraph.getLevel(): Int {
@@ -119,6 +185,6 @@ class MarkdownManager {
     }
 
     private fun Paragraph.isNumbered(): Boolean {
-        return this.ilvl > 0.toShort() // Poziom numerowania listy
+        return this.ilvl > 0.toShort()
     }
 }

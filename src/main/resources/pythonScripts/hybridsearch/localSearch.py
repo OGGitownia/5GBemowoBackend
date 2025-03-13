@@ -28,7 +28,7 @@ def load_hybrid_database():
     documents = {row[0]: row[1] for row in cursor.fetchall()}  # Mapowanie ID → Tekst
     conn.close()
 
-    print("✅ Baza załadowana poprawnie!")
+    print(" Baza załadowana poprawnie!")
     return faiss_index, documents
 
 
@@ -40,7 +40,7 @@ def text_to_embedding(text, dimension):
 
 def search_faiss(query_text, faiss_index, documents):
     """Wykonuje wyszukiwanie w FAISS na podstawie zapytania"""
-    print(f"🔍 Wyszukiwanie FAISS dla: {query_text}")
+    print(f"Wyszukiwanie FAISS dla: {query_text}")
 
     # Tworzenie embeddingu zapytania
     query_embedding = text_to_embedding(query_text, faiss_index.d)
@@ -61,16 +61,16 @@ def interactive_search():
     while True:
         query_text = input("\n🔍 Wpisz zapytanie (lub 'exit' aby zakończyć): ").strip()
         if query_text.lower() == "exit":
-            print("🚪 Zamykanie programu.")
+            print("Zamykanie programu.")
             break
 
         results = search_faiss(query_text, faiss_index, documents)
         if results:
-            print("✅ Wyniki wyszukiwania:")
+            print("Wyniki wyszukiwania:")
             for i, result in enumerate(results, start=1):
                 print(f"{i}. {result}")
         else:
-            print("❌ Brak pasujących wyników.")
+            print("Brak pasujących wyników.")
 
 
 # Uruchomienie testowego wyszukiwania
