@@ -45,6 +45,21 @@ class ServerStartupManager(
             println("Norma 3GPP pobrana i rozpakowana")
         }
 
+        if (!markDownManager.isMarkdownExists(markdownPath)) {
+            if (!init) {
+                println("Markdown nie istnieje. Czyszczenie serwera...")
+                resetServer()
+                return
+            } else {
+                println("Tworzenie Markdown...")
+                if (!markDownManager.convertDocToMarkdown(docPath, markdownPath)) {
+                    println("Błąd: Nie udało się przekonwertować DOC na Markdown.")
+                    exitProcess(1)
+                }
+                println("Markdown utworzony.")
+            }
+        }
+
 
         if (!jsonManager.isJsonExists(jsonPath)) {
             println("Brak pliku JSON z chunk")
@@ -82,21 +97,6 @@ class ServerStartupManager(
                 }
                 
                  */
-            }
-        }
-
-        if (!markDownManager.isMarkdownExists(markdownPath)) {
-            if (!init) {
-                println("Markdown nie istnieje. Czyszczenie serwera...")
-                resetServer()
-                return
-            } else {
-                println("Tworzenie Markdown...")
-                if (!markDownManager.convertDocToMarkdown(docPath, markdownPath)) {
-                    println("Błąd: Nie udało się przekonwertować DOC na Markdown.")
-                    exitProcess(1)
-                }
-                println("Markdown utworzony.")
             }
         }
 
