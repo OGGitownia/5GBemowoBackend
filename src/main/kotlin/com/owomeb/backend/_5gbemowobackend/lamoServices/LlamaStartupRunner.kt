@@ -11,7 +11,7 @@ import java.net.URL
 import kotlin.concurrent.thread
 
 
-@Component
+//@Component
 class LlamaStartupRunner(val llamaService: LlamaService) : CommandLineRunner {
 
     private val serverPath = "C:\\Users\\Pc\\llama.cpp\\build-cuda\\bin\\Release\\llama-server.exe"

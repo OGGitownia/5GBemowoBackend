@@ -41,12 +41,11 @@ def shutdown():
 
 
 def run_server():
-    """ Uruchamia serwer Flask w osobnym wątku """
-    print("✅ Serwer embeddingów uruchomiony. Powiadamiam Spring Boot...")
+    print("Serwer embeddingów uruchomiony. Powiadamiam Spring Boot...")
     try:
         requests.post("http://localhost:8080/flask/notify", json={"status": "ready"})
     except Exception as e:
-        print(f"⚠️ Błąd podczas powiadamiania Spring Boot: {e}")
+        print(f"Błąd podczas powiadamiania Spring Boot: {e}")
 
     app.run(host="0.0.0.0", port=5000)
 

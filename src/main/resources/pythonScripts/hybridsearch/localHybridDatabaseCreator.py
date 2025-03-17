@@ -5,8 +5,8 @@ import numpy as np
 import os
 
 # Stałe ścieżki do plików
-JSON_PATH = r"C:\gitRepositories\5GBemowo-Backend\src\main\resources\norms\embeeded36331-e60.json"
-DB_DIR = "data"
+JSON_PATH = r"C:\gitRepositories\5GBemowo-Backend\src\main\resources\norms3\embeeded36331-e60.json"
+DB_DIR = "data3"
 DB_PATH = os.path.join(DB_DIR, "hybrid_db.sqlite")
 FAISS_INDEX_PATH = os.path.join(DB_DIR, "hybrid_db.index")
 
@@ -68,7 +68,7 @@ def create_hybrid_database():
     print("Sprawdzanie bazy SQLite")
 
     if os.path.exists(DB_PATH):
-        print("Usuwanie istniejącej bazy: " + str({DB_PATH}))
+        print("Usuwanie istniejącej bazy: " + DB_PATH)
         try:
             os.remove(DB_PATH)
         except Exception as e:
@@ -88,7 +88,7 @@ def create_hybrid_database():
 
         connectionWithDB.commit()
         connectionWithDB.close()
-        print("Baza SQLite zapisana: " + {DB_PATH})
+        print("Baza SQLite zapisana: " + DB_PATH)
     except Exception as e:
         print("Błąd tworzenia bazy SQLite: " + str({e}))
         return

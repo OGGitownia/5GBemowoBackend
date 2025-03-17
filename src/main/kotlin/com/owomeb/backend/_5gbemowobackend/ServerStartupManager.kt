@@ -18,22 +18,21 @@ class ServerStartupManager(
     private val hybridSearchService: HybridSearchService,
     private val llamaService: LlamaService
 ) {
-    private val zipPath = "src/main/resources/norms/norma.zip"
-    private val markdownPath = "src/main/resources/norms/36331-e60.md"
-    private val pureMarkdownPath = "src/main/resources/norms/36331-e60_pure.md"
-    private val docPath = "src/main/resources/norms/36331-e60.doc"
-    private val jsonPath = "src/main/resources/norms/36331-e60.json"
-    private val jsonPath2 = "src/main/resources/norms/36331-e60.json2"
-    private val chunkyPath = "src/main/resources/norms/chunky.json2"
+    private val zipPath = "src/main/resources/norms3/norma.zip"
+    private val markdownPath = "src/main/resources/norms3/36331-e60.md"
+    private val pureMarkdownPath = "src/main/resources/norms3/36331-e60_pure.md"
+    private val docPath = "src/main/resources/norms3/36331-e60.doc"
+    private val jsonPath = "src/main/resources/norms3/36331-e60.json"
+    private val jsonPath2 = "src/main/resources/norms3/36331-e60.json2"
+    private val chunkyPath = "src/main/resources/norms3/chunky.json2"
     private val normaUrl = "https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-e60.zip"
-    private val embeddedJsonPath = "src/main/resources/norms/embeeded36331-e60.json"
-    private val hybridDatabaseDir = "src/main/resources/hybrid"
+    private val embeddedJsonPath = "src/main/resources/norms3/embeeded36331-e60.json"
+    private val hybridDatabaseDir = "src/main/resources/hybrid3"
     private var init = false
 
     fun serverStartup() {
         println("\n()()()()()()()(()()()()((   Uruchamianie serwera  ()()()()()()()(()()()()((\n")
 
-        init = true
         if (!normaManager.isNormaDownloaded(docPath)) {
             if(!init){
                 println("Plik normy 3GPP nie istnieje")
@@ -86,11 +85,11 @@ class ServerStartupManager(
 
         if (!embeddingManager.isEmbeddedJsonExist(embeddedJsonPath)) {
             if (!init) {
-                println("embedded for json nie istnieje. Czyszczenie serwera...")
+                println("embedded for json nie istnieje. Czyszczenie serwera")
                 resetServer()
                 return
             } else {
-                println("Tworzenie embedded JSON...")
+                println("Tworzenie embedded JSON")
                 if (!embeddingManager.generateEmbeddingsForJson(chunkyPath)) {
                     println("Błąd: Nie udało się przekonwertować json na json. Czysty absurd")
                     exitProcess(1)
@@ -114,8 +113,8 @@ class ServerStartupManager(
         if (hybridSearchManagerController.isHybridBaseExists(hybridDatabaseDir)) {
             //Stats.getStats(jsonPath, embeddedJsonPath)
             println("\nBaza ok\n")
-            hybridSearchService.addToQueue("How is SystemInformationBlockType1-NB (SIB1-NB) scheduled in NB-IoT?")
-            hybridSearchService.addToQueue("What is the role of the schedulingInfoSIB1 field in MIB-NB?")
+            hybridSearchService.addToQueue("What is suspended RRC connection?")
+            //hybridSearchService.addToQueue("What is the role of the schedulingInfoSIB1 field in MIB-NB?")
             val contexts = listOf(
                     "",
             "Opis śmierci przedstawiony w Boskiej Komedii Dantego Alighieri.",

@@ -20,8 +20,10 @@ class FlaskServerService {
     private var flaskProcess: Process? = null
     private val restTemplate = RestTemplate()
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
-    private val jsonPath = "src/main/resources/norms/36331-e60.json"
-    private val embeddedJsonPath = "src/main/resources/norms/embeeded36331-e60.json"
+    private val jsonPath = "src/main/resources/norms3/36331-e60.json"
+    private val embeddedJsonPath = "src/main/resources/norms3/embeeded36331-e60.json"
+    private var isProcessingQueue = false
+
 
     private val _queue = MutableStateFlow<List<String>>(emptyList())
     val queue: StateFlow<List<String>> = _queue.asStateFlow()
@@ -34,9 +36,14 @@ class FlaskServerService {
             combine(queue, serverReady) { queue, serverReady ->
                 queue.isNotEmpty() && serverReady
             }.collect { canProcess ->
-                if (canProcess) processQueue(embeddedJsonPath)
+                if (canProcess && !isProcessingQueue) {
+                    isProcessingQueue = true
+                    println("wywolal")
+                    processQueue(embeddedJsonPath)
+                }
             }
         }
+
 
         /*
         coroutineScope.launch {
@@ -68,27 +75,42 @@ class FlaskServerService {
     }
 
 
+
+
     private fun processQueue(embeddedPath: String) {
         coroutineScope.launch {
             proceedParts++
-
             val embeddedFile = File(embeddedPath)
-            val newJsonData = JsonData(mutableListOf())
+            val newJsonData: JsonData
+
+            if (embeddedFile.exists()) {
+                val existingContent = embeddedFile.readText()
+                newJsonData = if (existingContent.isNotEmpty()) {
+                    Json.decodeFromString<JsonData>(existingContent)
+                } else {
+                    JsonData(mutableListOf())
+                }
+            } else {
+                newJsonData = JsonData(mutableListOf())
+            }
 
             while (_queue.value.isNotEmpty()) {
                 val textToProcess = _queue.value.firstOrNull() ?: continue
-                //println(" Wysyłanie 1 fragmentu do serwera Flask:")
 
                 println("Aktualny stan kolejki: ${getQueueSize()}")
-                if(getQueueSize() == 1300){
-                    println(newJsonData)
-                }
+                println("Aktualna długość JSON: ${newJsonData.fragments.size}")
+
                 try {
                     val embedding = withContext(Dispatchers.IO) { getEmbeddings(textToProcess) }
 
                     if (embedding != null) {
                         newJsonData.fragments.add(Fragment(textToProcess, embedding))
                         _queue.update { it.drop(1) }
+
+                        if (newJsonData.fragments.size % 100 == 0) {
+                            embeddedFile.writeText(Json.encodeToString(newJsonData))
+                            println("Zapisano nowy fragment do JSON: $embeddedPath")
+                        }
                     } else {
                         println("Błąd: Flask nie zwrócił poprawnych danych dla: $textToProcess")
                         System.out.flush()
@@ -99,6 +121,7 @@ class FlaskServerService {
                 }
             }
 
+            // Zapis końcowy po przetworzeniu całej kolejki
             embeddedFile.writeText(Json.encodeToString(newJsonData))
             println("Zapisano nowy plik JSON: $embeddedPath")
         }

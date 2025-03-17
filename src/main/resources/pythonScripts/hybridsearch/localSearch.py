@@ -4,19 +4,17 @@ import numpy as np
 import os
 
 
-# Stałe ścieżki do plików
-DB_DIR = "data"
+DB_DIR = "data2"
 DB_PATH = os.path.join(DB_DIR, "hybrid_db.sqlite")
 FAISS_INDEX_PATH = os.path.join(DB_DIR, "hybrid_db.index")
 
 
 def load_hybrid_database():
-    """Wczytuje indeksy FAISS i SQLite do pamięci"""
     if not os.path.exists(DB_PATH) or not os.path.exists(FAISS_INDEX_PATH):
         print("Błąd: Pliki bazy danych nie istnieją! Uruchom najpierw skrypt tworzący bazę.")
         return None, None
 
-    print("🔄 Wczytywanie bazy FAISS i SQLite...")
+    print("Wczytywanie bazy FAISS i SQLite...")
 
     # Wczytanie FAISS
     faiss_index = faiss.read_index(FAISS_INDEX_PATH)
@@ -33,13 +31,12 @@ def load_hybrid_database():
 
 
 def text_to_embedding(text, dimension):
-    """Symuluje przekształcenie tekstu na embedding. W rzeczywistości powinien być model NLP."""
     np.random.seed(abs(hash(text)) % (2**32))  # Deterministyczne embeddingi dla powtarzalności
     return np.random.rand(dimension).astype("float32")
 
 
 def search_faiss(query_text, faiss_index, documents):
-    """Wykonuje wyszukiwanie w FAISS na podstawie zapytania"""
+
     print(f"Wyszukiwanie FAISS dla: {query_text}")
 
     # Tworzenie embeddingu zapytania
@@ -59,7 +56,7 @@ def interactive_search():
         return
 
     while True:
-        query_text = input("\n🔍 Wpisz zapytanie (lub 'exit' aby zakończyć): ").strip()
+        query_text = input("\n Wpisz zapytanie (lub 'exit' aby zakończyć): ").strip()
         if query_text.lower() == "exit":
             print("Zamykanie programu.")
             break

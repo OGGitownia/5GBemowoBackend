@@ -12,7 +12,7 @@ class ChunkyChunker(private val pureMarkdownPath: String, private val outputPath
         }
 
         val allLines = inputFile.readLines()
-        val linesToProcess = (allLines.size * 0.05).toInt().coerceAtLeast(1) // Przetwarzamy minimum 1 linię
+        val linesToProcess = (allLines.size * 0.05).toInt().coerceAtLeast(1)
         val possibleChapters = mutableListOf<String>()
 
         for (line in allLines.take(linesToProcess)) {
@@ -247,11 +247,11 @@ class ChunkyChunker(private val pureMarkdownPath: String, private val outputPath
         val mostLikelyFormat = categorizedChapters.maxByOrNull { it.size }
 
         if (mostLikelyFormat != null) {
-            println("Najbardziej prawdopodobny format rozdziałów: ${mostLikelyFormat.joinToString(", ")}")
+            println("Najbardziej prawdopodobny format: ${mostLikelyFormat.joinToString(", ")}")
 
             chunkTextByChapter()
         } else {
-            println("Nie znaleziono odpowiedniego formatu rozdziałów.")
+            println("Nie znaleziono odpowiedniego formatu rozdziałów")
         }
     }
 
