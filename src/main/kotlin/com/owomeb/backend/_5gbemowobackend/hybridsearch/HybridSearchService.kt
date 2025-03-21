@@ -1,6 +1,5 @@
 package com.owomeb.backend._5gbemowobackend.hybridsearch
 
-import com.owomeb.backend._5gbemowobackend.lamoServices.LlamaService
 import com.owomeb.backend._5gbemowobackend.pythonServerModel.PythonServerModel
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.*
@@ -11,7 +10,7 @@ import org.json.JSONObject
 @RestController
 @RequestMapping("/hybrid_search_server")
 class HybridSearchService(
-    private val llamaService: LlamaService
+    private val lamoAsker: LamoAsker
 ) : PythonServerModel<String>(
     scriptPath = "src/main/resources/pythonScripts/hybridsearch/serverSearch.py",
     serverName = "hybrid_search_server",
@@ -38,7 +37,8 @@ class HybridSearchService(
 
         println("Result of hybrid search for: $item  is  \n $cleanResult")
 
-        llamaService.addToQueue(item, cleanResult)
+        val newQuery = LamoAsker.AugmentedQuery(context = cleanResult, question = item)
+        lamoAsker.addToQueue(newQuery)
     }
 
 }

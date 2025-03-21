@@ -11,7 +11,7 @@ SPRING_BOOT_READY_URL = "http://localhost:8080/hybrid-service/search-server-read
 
 
 def notify_spring_boot(port):
-    """Powiadamia Spring Boot o gotowości serwera."""
+
     try:
         response = requests.post(SPRING_BOOT_READY_URL, json={"server_name": server_name, "port": port})
         print(f"Powiadomiono Spring Boot: {server_name} działa na porcie {port}. Status: {response.status_code}")

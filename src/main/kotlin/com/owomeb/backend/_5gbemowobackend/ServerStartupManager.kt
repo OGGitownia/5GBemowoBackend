@@ -3,7 +3,6 @@ package com.owomeb.backend._5gbemowobackend
 import com.owomeb.backend._5gbemowobackend.baseCreators.*
 import com.owomeb.backend._5gbemowobackend.hybridsearch.HybridSearchManagerController
 import com.owomeb.backend._5gbemowobackend.hybridsearch.HybridSearchService
-import com.owomeb.backend._5gbemowobackend.lamoServices.LlamaService
 import org.springframework.stereotype.Component
 import java.io.File
 import kotlin.system.exitProcess
@@ -16,7 +15,6 @@ class ServerStartupManager(
     private val embeddingManager: EmbeddingManager,
     private val hybridSearchManagerController: HybridSearchManagerController,
     private val hybridSearchService: HybridSearchService,
-    private val llamaService: LlamaService
 ) {
     private val zipPath = "src/main/resources/norms3/norma.zip"
     private val markdownPath = "src/main/resources/norms3/36331-e60.md"
