@@ -7,8 +7,10 @@ import kotlinx.serialization.json.jsonObject
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.ApplicationContext
+import org.springframework.scheduling.annotation.EnableAsync
 import java.io.File
 
+@EnableAsync
 @SpringBootApplication
 class Application
 
@@ -28,9 +30,10 @@ fun main(args: Array<String>) {
         println("Błąd podczas wczytywania JSON: ${e.message}")
     }
 
-     */
-
-    context.getBean(ServerStartupManager::class.java).apply {
+context.getBean(ServerStartupManager::class.java).apply {
         serverStartup()
     }
+     */
+
+
 }

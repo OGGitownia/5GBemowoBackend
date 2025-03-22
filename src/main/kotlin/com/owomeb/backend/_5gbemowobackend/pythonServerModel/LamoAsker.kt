@@ -16,6 +16,20 @@ class LamoAsker : PythonServerModel<LamoAsker.AugmentedQuery>(
         val augmentedQuery = AugmentedQuery(context, question)
         this.addToQueue(augmentedQuery)
     }
+    fun streamResponse(
+        question: String,
+        context: String,
+        onToken: (String, Boolean) -> Unit
+    ) {
+        val mockResponse = "This is a simulated answer for testing purposes only."
+        val tokens = mockResponse.split(" ")
+
+        for ((i, token) in tokens.withIndex()) {
+            onToken(token + " ", i == tokens.lastIndex)
+            Thread.sleep(250) // symulacja opóźnienia generacji tokena
+        }
+    }
+
 
     data class AugmentedQuery(val context: String, val question: String)
 }

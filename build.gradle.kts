@@ -25,8 +25,12 @@ dependencies {
 
 
 
+    implementation("org.springframework.boot:spring-boot-starter-websocket")
+    implementation("org.postgresql:postgresql:42.7.5")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
 
-
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    runtimeOnly("org.postgresql:postgresql")
 
 
     implementation("com.google.code.gson:gson:2.10.1")
@@ -47,6 +51,7 @@ dependencies {
 
     // Kompresja ZIP
     implementation("org.apache.commons:commons-compress:1.21")
+    implementation("org.springframework.boot:spring-boot-starter-web")
 
     // Testy
     testImplementation("org.springframework.boot:spring-boot-starter-test")

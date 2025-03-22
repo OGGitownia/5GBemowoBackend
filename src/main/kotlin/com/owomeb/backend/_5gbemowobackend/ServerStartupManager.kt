@@ -1,8 +1,11 @@
 package com.owomeb.backend._5gbemowobackend
 
+import com.owomeb.backend._5gbemowobackend.appControllers.BaseController
 import com.owomeb.backend._5gbemowobackend.baseCreators.*
 import com.owomeb.backend._5gbemowobackend.hybridsearch.HybridSearchManagerController
 import com.owomeb.backend._5gbemowobackend.hybridsearch.HybridSearchService
+import org.springframework.boot.context.event.ApplicationReadyEvent
+import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 import java.io.File
 import kotlin.system.exitProcess
@@ -15,6 +18,7 @@ class ServerStartupManager(
     private val embeddingManager: EmbeddingManager,
     private val hybridSearchManagerController: HybridSearchManagerController,
     private val hybridSearchService: HybridSearchService,
+    private val baseController: BaseController
 ) {
     private val zipPath = "src/main/resources/norms3/norma.zip"
     private val markdownPath = "src/main/resources/norms3/36331-e60.md"
@@ -29,6 +33,7 @@ class ServerStartupManager(
     private var init = false
 
     fun serverStartup() {
+        /*
         println("\n()()()()()()()(()()()()((   Uruchamianie serwera  ()()()()()()()(()()()()((\n")
 
         if (!normaManager.isNormaDownloaded(docPath)) {
@@ -135,6 +140,10 @@ class ServerStartupManager(
 
 
         ///com.owomeb.backend._5gbemowobackend.pythonServerModel.main()
+
+         */
+        println("Próba usuwania")
+        baseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-e60.zip")
     }
 
 
@@ -161,6 +170,10 @@ class ServerStartupManager(
             }
         }
         init = true
+        serverStartup()
+    }
+    @EventListener(ApplicationReadyEvent::class)
+    fun onServerStart() {
         serverStartup()
     }
 
