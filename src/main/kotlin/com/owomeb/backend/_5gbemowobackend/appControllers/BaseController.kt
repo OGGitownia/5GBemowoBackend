@@ -52,7 +52,7 @@ class BaseController(
         // Jeśli baza jeszcze nie była gotowa → rozpocznij przetwarzanie
         if (newBase.status == BaseStatus.PENDING) {
             println("zlecono tworzenie")
-            asyncBaseProcessor.processBase(newBase.id)
+            asyncBaseProcessor.processBase(newBase.id, request.sourceUrl)
         }
         return ResponseEntity.ok(newBase)
     }

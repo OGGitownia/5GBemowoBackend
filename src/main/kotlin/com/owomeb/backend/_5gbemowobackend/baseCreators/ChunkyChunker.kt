@@ -4,7 +4,7 @@ import java.io.File
 
 class ChunkyChunker(private val pureMarkdownPath: String, private val outputPath: String) {
 
-    fun findPossibleChapters() {
+    fun chunkThat() {
         val inputFile = File(pureMarkdownPath)
         if (!inputFile.exists()) {
             println("Plik źródłowy nie istnieje: $pureMarkdownPath")

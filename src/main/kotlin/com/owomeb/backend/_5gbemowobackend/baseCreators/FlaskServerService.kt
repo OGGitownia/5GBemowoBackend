@@ -1,5 +1,6 @@
 package com.owomeb.backend._5gbemowobackend.baseCreators
 
+import com.owomeb.backend._5gbemowobackend.AppPathsConfig
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.serialization.encodeToString
@@ -14,7 +15,7 @@ import java.io.InputStreamReader
 import java.util.concurrent.Executors
 
 @Service
-class FlaskServerService {
+class FlaskServerService(private val appPathsConfig: AppPathsConfig) {
     private var proceedParts = 0
     private val BASE_URL = "http://localhost:5000"
     private var flaskProcess: Process? = null

@@ -47,7 +47,7 @@ class EmbeddingManager @Autowired constructor(
     }
 
 
-    fun generateEmbeddingsForJson(inputFilePath: String): Boolean {
+    fun generateEmbeddingsForJson(inputFilePath: String, outputFile: String): Boolean {
         return try {
             val inputFile = File(inputFilePath)
             if (!inputFile.exists()) {
