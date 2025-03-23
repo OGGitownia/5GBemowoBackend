@@ -78,16 +78,19 @@ abstract class PythonServerModel<T>(
     }
 
 
-    @PostMapping("/server-ready")
-    fun markServerAsReady(@RequestBody body: Map<String, Any>): Map<String, String> {
+
+    open fun markServerAsReady(@RequestBody body: Map<String, Any>): Map<String, String> {
         val port = body["port"] as? Int ?: return mapOf("status" to "ERROR", "message" to "Brak portu w żądaniu!")
 
-        // Zapisujemy rzeczywisty port
         actualPort = port
 
 
+        println("markServerAsReady, długość kolejki: ${queue.value.size}")
         isServerReady = true
-        processQueueIfNeeded()
+        thread(start = true) {
+            Thread.sleep(5000)
+            processQueueIfNeeded()
+        }
 
         return mapOf("status" to "OK", "message" to "Serwer $serverName gotowy na porcie $actualPort.")
     }
@@ -127,10 +130,17 @@ abstract class PythonServerModel<T>(
         thread {
             try {
                 val url = URL("http://localhost:$actualPort/$serverName/process")
+                println("Piastów")
+                println(url)
                 val connection = url.openConnection() as HttpURLConnection
                 connection.requestMethod = "POST"
                 connection.doOutput = true
                 connection.setRequestProperty("Content-Type", "application/json")
+
+
+                connection.connectTimeout = 60_000 // 60s
+                connection.readTimeout = 120 * 60 * 1000 // 2 godziny
+
 
                 val objectMapper = jacksonObjectMapper()
                 val requestBody = objectMapper.writeValueAsString(item)
@@ -152,6 +162,7 @@ abstract class PythonServerModel<T>(
             }
         }
     }
+
 
 
     open fun publishResult(result: String, item: T) {

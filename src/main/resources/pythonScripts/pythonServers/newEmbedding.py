@@ -9,19 +9,25 @@ import requests
 
 sys.stdout.reconfigure(encoding='utf-8')
 
+
 app = Flask(__name__)
 model = SentenceTransformer("BAAI/bge-m3")
 
-server_name = "embedding-server"
-port = 5003
-SPRING_BOOT_NOTIFY = "http://localhost:8080/flask/notify"
+server_name = sys.argv[1] if len(sys.argv) > 1 else "newEmbeddingServer"
+port = int(sys.argv[2]) if len(sys.argv) > 2 else 5003
+
+SPRING_BOOT_NOTIFY = f"http://localhost:8080/{server_name}/server-ready"
+
+
 
 @app.route(f"/{server_name}/process", methods=["POST"])
 def process_embedding_request():
+    print(f"process_embedding_request", flush=True)
     try:
         data = request.get_json()
         input_file = data.get("inputFile")
         output_file = data.get("outputFile")
+        print(f"Input file: {input_file}", flush=True)
 
         if not input_file or not output_file:
             return jsonify({"error": "Missing 'inputFile' or 'outputFile'"}), 400
@@ -29,28 +35,42 @@ def process_embedding_request():
         if not os.path.isfile(input_file):
             return jsonify({"error": f"Input file does not exist: {input_file}"}), 400
 
+        # Wczytaj linie
         with open(input_file, "r", encoding="utf-8") as f:
-            json_data = json.load(f)
+            lines = [line.strip() for line in f if line.strip()]
 
-        if "fragments" not in json_data:
-            return jsonify({"error": "'fragments' key not found in input file"}), 400
+        total = len(lines)
+        if total == 0:
+            return jsonify({"error": "Input file is empty"}), 400
 
-        for fragment in json_data["fragments"]:
-            content = fragment.get("content")
-            if content:
-                embedding = model.encode(content).tolist()
-                fragment["embeddedContent"] = embedding
+        print(f"Rozpoczynam generowanie embeddingów ({total} linii)...", flush=True)
 
-        with open(output_file, "w", encoding="utf-8") as f_out:
-            json.dump(json_data, f_out, ensure_ascii=False, indent=2)
+        results = []
+        for i, line in enumerate(lines, start=1):
+            embedding = model.encode(line).tolist()
+            results.append({
+                "content": line,
+                "embeddedContent": embedding
+            })
 
-        print(f"Embeddings written to {output_file}", flush=True)
+            # Progres co 10%
+            if i % max(1, total // 10) == 0 or i == total:
+                print(f"[{i}/{total}] ({round(i / total * 100)}%) przetworzono...", flush=True)
+
+            # Zapis tymczasowy co 100 chunków
+            if i % 100 == 0 or i == total:
+                with open(output_file, "w", encoding="utf-8") as f_out:
+                    json.dump(results, f_out, ensure_ascii=False, indent=2)
+                print(f"💾 Zapisano {i} elementów do pliku tymczasowo ({output_file})", flush=True)
+
+        print(f"✅ Embedding zakończony. Finalnie zapisano {len(results)} elementów do {output_file}", flush=True)
         return jsonify({"message": "Embedding completed", "output": output_file}), 200
 
     except Exception as e:
         import traceback
         print(traceback.format_exc(), flush=True)
         return jsonify({"error": str(e)}), 500
+
 
 @app.route(f"/{server_name}/shutdown", methods=["POST"])
 def shutdown():
@@ -66,8 +86,10 @@ def status():
 
 def notify_spring_boot():
     print("Notifying Spring Boot that embedding server is ready...", flush=True)
+    print(f"SPRING_BOOT_NOTIFY={SPRING_BOOT_NOTIFY}", flush=True)
     try:
-        requests.post(SPRING_BOOT_NOTIFY, json={"status": "ready"})
+        response = requests.post(SPRING_BOOT_NOTIFY, json={"port": port})
+        print(f"Spring Boot responded: {response.status_code} {response.text}", flush=True)
     except Exception as e:
         print(f"Notification error: {e}", flush=True)
 
