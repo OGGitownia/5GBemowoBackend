@@ -6,6 +6,7 @@ import com.owomeb.backend._5gbemowobackend.pythonServerModel.NewEmbeddingManager
 import com.owomeb.backend._5gbemowobackend.baseCreators.NormManager
 import com.owomeb.backend._5gbemowobackend.hybridsearch.HybridSearchManagerController
 import com.owomeb.backend._5gbemowobackend.hybridsearch.HybridSearchService
+import com.owomeb.backend._5gbemowobackend.pythonServerModel.HybridDbCreator
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 
@@ -16,7 +17,7 @@ class CommissionService(
     private val normManager: NormManager,
     private val markdownManager: MarkdownManager,
     private val embeddingManager: NewEmbeddingManager,
-    private val hybridSearchManagerController: HybridSearchManagerController,
+    private val hybridDbCreator: HybridDbCreator,
     private val hybridSearchService: HybridSearchService,
 ) {
 
@@ -28,12 +29,13 @@ class CommissionService(
             normaManager = normManager,
             markDownManager = markdownManager,
             embeddingManager = embeddingManager,
-            hybridSearchManagerController = hybridSearchManagerController,
             hybridSearchService = hybridSearchService,
             baseID = baseID,
-            sourceUrl = sourceUrl
+            sourceUrl = sourceUrl,
+            hybridDbCreator = hybridDbCreator,
+            commissionStatus = CommissionStatus.EMBEDDED
         )
 
-        commission.commissionStatus = CommissionStatus.INITIAL
+        //commission.commissionStatus = CommissionStatus.INITIAL
     }
 }

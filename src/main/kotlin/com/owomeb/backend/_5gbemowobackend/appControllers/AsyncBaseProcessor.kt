@@ -4,6 +4,7 @@ import com.owomeb.backend._5gbemowobackend.AppPathsConfig
 import com.owomeb.backend._5gbemowobackend.baseCreators.*
 import com.owomeb.backend._5gbemowobackend.hybridsearch.HybridSearchManagerController
 import com.owomeb.backend._5gbemowobackend.hybridsearch.HybridSearchService
+import com.owomeb.backend._5gbemowobackend.pythonServerModel.HybridDbCreator
 import com.owomeb.backend._5gbemowobackend.pythonServerModel.NewEmbeddingManager
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
@@ -46,13 +47,13 @@ class Commission(private val baseService: BaseService,
                  private val normaManager: NormManager,
                  private val markDownManager: MarkdownManager,
                  private val embeddingManager: NewEmbeddingManager,
-                 private val hybridSearchManagerController: HybridSearchManagerController,
+                 private val hybridDbCreator: HybridDbCreator,
                  private val hybridSearchService: HybridSearchService,
                  val baseID: Long,
                  val sourceUrl: String,
                  commissionStatus: CommissionStatus = CommissionStatus.INITIAL) {
     init {
-        download()
+        hybridBase()
     }
 
     var commissionStatus: CommissionStatus = commissionStatus
@@ -117,8 +118,13 @@ class Commission(private val baseService: BaseService,
     }
 
     private fun hybridBase() {
-        println("Creating hybrid base for $baseID...")
-        commissionStatus = CommissionStatus.HYBRID_BASED
+        println("Creating hybrid base for $baseID")
+        baseService.updateStatus(baseID, BaseStatus.PROCESSING, "Tworzenie bazy hybrydowej")
+        hybridDbCreator.createDb(
+            inputFilePath = appPathsConfig.getEmbeddedJsonPath(baseID.toString()),
+            outputFilePath = appPathsConfig.getHybridBaseDirectory(baseID.toString()),
+            commission = this
+        )
     }
 
     private fun finalize() {

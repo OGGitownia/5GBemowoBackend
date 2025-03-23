@@ -1,9 +1,12 @@
 package com.owomeb.backend._5gbemowobackend
 
 import com.owomeb.backend._5gbemowobackend.appControllers.BaseController
+import com.owomeb.backend._5gbemowobackend.appControllers.BaseStatus
+import com.owomeb.backend._5gbemowobackend.appControllers.CommissionService
 import com.owomeb.backend._5gbemowobackend.baseCreators.*
 import com.owomeb.backend._5gbemowobackend.hybridsearch.HybridSearchManagerController
 import com.owomeb.backend._5gbemowobackend.hybridsearch.HybridSearchService
+import com.owomeb.backend._5gbemowobackend.pythonServerModel.HybridDbCreator
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
@@ -18,7 +21,9 @@ class ServerStartupManager(
     private val embeddingManager: EmbeddingManager,
     private val hybridSearchManagerController: HybridSearchManagerController,
     private val hybridSearchService: HybridSearchService,
-    private val baseController: BaseController
+    private val baseController: BaseController,
+    private val hybridDbCreator: HybridDbCreator,
+    private val commissionService: CommissionService
 ) {
     private val zipPath = "src/main/resources/norms3/norma.zip"
     private val markdownPath = "src/main/resources/norms3/36331-e60.md"
@@ -33,7 +38,9 @@ class ServerStartupManager(
     private var init = false
 
     fun serverStartup() {
-        baseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-e60.zip")
+
+        commissionService.startCommission(26, "request.sourceUrl")
+        //lbaseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-e60.zip")
     }
 
 
