@@ -1,10 +1,14 @@
 package com.owomeb.backend._5gbemowobackend.hybridsearch
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.owomeb.backend._5gbemowobackend.chat.Question
+import com.owomeb.backend._5gbemowobackend.chat.QuestionStatus
 import com.owomeb.backend._5gbemowobackend.pythonServerModel.PythonServerModel
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.*
 
-@Service
+
 @RestController
 @RequestMapping("/lamo_asker")
 class LamoAsker : PythonServerModel<LamoAsker.AugmentedQuery>(
@@ -12,8 +16,14 @@ class LamoAsker : PythonServerModel<LamoAsker.AugmentedQuery>(
     serverName = "lamo_asker",
     autoClose = false
 ) {
-    fun ask(context: String, question: String) {
-        val augmentedQuery = AugmentedQuery(context, question)
+
+    @PostMapping("/server-ready")
+    override fun markServerAsReady(@RequestBody body: Map<String, Any>): Map<String, String> {
+        return super.markServerAsReady(body)
+    }
+
+    fun ask(context: String, question: String, questionObject: Question) {
+        val augmentedQuery = AugmentedQuery(context, question, questionObject)
         this.addToQueue(augmentedQuery)
     }
     fun streamResponse(
@@ -30,6 +40,17 @@ class LamoAsker : PythonServerModel<LamoAsker.AugmentedQuery>(
         }
     }
 
+    private val mapper = jacksonObjectMapper()
 
-    data class AugmentedQuery(val context: String, val question: String)
+    override fun publishResult(result: String, item: AugmentedQuery) {
+        println(result)
+        val parsed: Map<String, String> = mapper.readValue(result)
+        val responseText = parsed["response"] ?: "Brak odpowiedzi"
+        item.questionObject.answer = responseText
+        println(responseText)
+        item.questionObject.questionStatus = QuestionStatus.ANSWERED
+    }
+
+
+    data class AugmentedQuery(val context: String, val question: String, val questionObject: Question)
 }

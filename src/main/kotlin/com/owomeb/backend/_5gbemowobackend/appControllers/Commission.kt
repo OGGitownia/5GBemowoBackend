@@ -2,45 +2,13 @@ package com.owomeb.backend._5gbemowobackend.appControllers
 
 import com.owomeb.backend._5gbemowobackend.AppPathsConfig
 import com.owomeb.backend._5gbemowobackend.baseCreators.*
-import com.owomeb.backend._5gbemowobackend.hybridsearch.HybridSearchManagerController
 import com.owomeb.backend._5gbemowobackend.hybridsearch.HybridSearchService
 import com.owomeb.backend._5gbemowobackend.pythonServerModel.HybridDbCreator
 import com.owomeb.backend._5gbemowobackend.pythonServerModel.NewEmbeddingManager
-import org.springframework.scheduling.annotation.Async
-import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
-@Service
-class AsyncBaseProcessor(
-    private val baseService: BaseService,
-    private val appPathsConfig: AppPathsConfig,
-    private val normaManager: NormManager,
-    private val markDownManager: MarkdownManager,
-    private val embeddingManager: NewEmbeddingManager,
-    private val hybridSearchManagerController: HybridSearchManagerController,
-    private val hybridSearchService: HybridSearchService,
-) {
-
-    @Async
-    fun processBase(baseId: Long, sourceUrl: String) {
 
 
-
-/*
-            // 5. tworzenie bazy hybrydowej
-            baseService.updateStatus(baseId, BaseStatus.PROCESSING, "tworzenie bazdy hybrydowej")
-            hybridSearchManagerController.addCommission(
-                embeddedJsonPath = appPathsConfig.getEmbeddedJsonPath(baseId.toString()),
-                hybridDatabaseDir = appPathsConfig.getHybridBaseDirectory(baseId.toString()))
-
-
- */
-
-
-
-    }
-
-}
 
 class Commission(private val baseService: BaseService,
                  private val appPathsConfig: AppPathsConfig,
@@ -53,7 +21,7 @@ class Commission(private val baseService: BaseService,
                  val sourceUrl: String,
                  commissionStatus: CommissionStatus = CommissionStatus.INITIAL) {
     init {
-        hybridBase()
+        download()
     }
 
     var commissionStatus: CommissionStatus = commissionStatus

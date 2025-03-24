@@ -79,7 +79,7 @@ def generate_response(context, question):
 
     response_text = model.invoke(prompt)
 
-    print(f"✅ Odpowiedź modelu:\n{response_text}", flush=True)
+    print(f"Odpowiedź modelu:\n{response_text}", flush=True)
 
     return response_text
 

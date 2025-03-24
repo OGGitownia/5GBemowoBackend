@@ -39,7 +39,7 @@ class ServerStartupManager(
 
     fun serverStartup() {
 
-        commissionService.startCommission(26, "request.sourceUrl")
+        //commissionService.startCommission(26, "request.sourceUrl")
         //lbaseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-e60.zip")
     }
 

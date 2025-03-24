@@ -1,137 +1,116 @@
+import os
 import faiss
 import sqlite3
 import numpy as np
-import os
+from flask import Flask, request, jsonify
+from sentence_transformers import SentenceTransformer
 import traceback
 import requests
-import sys
-import socket
-import time
 import threading
-from flask import Flask, request, jsonify
+import time
 import sys
-from sentence_transformers import SentenceTransformer
 
 sys.stdout.reconfigure(encoding='utf-8')
 
+# === CONFIGURATION ===
+server_name = sys.argv[1] if len(sys.argv) > 1 else "hybrid_search_server"
+port = int(sys.argv[2]) if len(sys.argv) > 2 else 5003
+SPRING_BOOT_NOTIFY = f"http://localhost:8080/{server_name}/server-ready"
 
-server_name = sys.argv[1] if len(sys.argv) > 1 else "HybridSearchServer"
-port = int(sys.argv[2]) if len(sys.argv) > 2 else 5001
-SPRING_BOOT_READY_URL = "http://localhost:8080/{}/server-ready".format(server_name)
-
+# === FLASK APP SETUP ===
 app = Flask(server_name)
 
-DB_DIR = "src/main/resources/pythonScripts/hybridsearch/data2"
-DB_PATH = os.path.join(DB_DIR, "hybrid_db.sqlite")
-FAISS_INDEX_PATH = os.path.join(DB_DIR, "hybrid_db.index")
-
-
-faiss_index = None
-documents = None
-
-def notify_spring_boot():
-    time.sleep(5)
-    """Powiadamia Spring Boot o gotowości serwera."""
-    try:
-        response = requests.post(SPRING_BOOT_READY_URL, json={"server_name": server_name, "port": port})
-        print(f"Powiadomiono Spring Boot: {server_name} działa na porcie {port}. Status: {response.status_code}")
-    except requests.exceptions.RequestException as e:
-        print(f"Błąd powiadamiania Spring Boot: {e}")
-
-def load_hybrid_database():
-    global faiss_index, documents
-
-    if not os.path.exists(DB_PATH) or not os.path.exists(FAISS_INDEX_PATH):
-        print("Błąd: Pliki bazy danych nie istnieją! Uruchom najpierw skrypt tworzący bazę")
-        return False
-
-    print("Wczytywanie bazy FAISS i SQLite")
-
-    try:
-        faiss_index = faiss.read_index(FAISS_INDEX_PATH)
-
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, sentence FROM documents")
-        documents = {row[0]: row[1] for row in cursor.fetchall()}
-        conn.close()
-
-        print("Baza załadowana poprawnie!")
-        return True
-    except Exception as e:
-        print(f"Błąd podczas wczytywania bazy: {e}")
-        print(traceback.format_exc())
-        return False
-
-
+# === MODEL ===
 model = SentenceTransformer("BAAI/bge-m3")
 
+# === DATABASE CACHE ===
+loaded_faiss = {}
+loaded_documents = {}
+
+# === HELPERS ===
+
+def notify_spring_boot():
+    print("Notifying Spring Boot that server is ready", flush=True)
+    try:
+        response = requests.post(SPRING_BOOT_NOTIFY, json={"port": port})
+        print(f"Spring Boot responded: {response.status_code} {response.text}", flush=True)
+    except Exception as e:
+        print(f"Notification error: {e}", flush=True)
+
+def load_hybrid_database(base_path):
+    if base_path in loaded_faiss:
+        return loaded_faiss[base_path], loaded_documents[base_path]
+
+    index_path = os.path.join(base_path, "hybrid_db.index")
+    sqlite_path = os.path.join(base_path, "hybrid_db.sqlite")
+
+    if not os.path.exists(index_path) or not os.path.exists(sqlite_path):
+        raise FileNotFoundError("Hybrid database files not found.")
+
+    faiss_index = faiss.read_index(index_path)
+    conn = sqlite3.connect(sqlite_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, sentence FROM documents")
+    documents = {row[0]: row[1] for row in cursor.fetchall()}
+    conn.close()
+
+    loaded_faiss[base_path] = faiss_index
+    loaded_documents[base_path] = documents
+
+    return faiss_index, documents
+
 def text_to_embedding(text, dimension):
-
     if not text or not isinstance(text, str):
-        raise ValueError("Podany tekst jest pusty lub ma nieprawidłowy format")
-
+        raise ValueError("Invalid input text.")
     embedding = model.encode(text)
     embedding = np.array(embedding, dtype=np.float32)
-
-
     if embedding.shape[0] != dimension:
-        raise ValueError(f"Nieprawidłowy wymiar embeddingu: {embedding.shape[0]} zamiast {dimension}")
-
+        raise ValueError(f"Expected embedding dimension {dimension}, got {embedding.shape[0]}")
     return embedding
 
-def search_faiss(query_text, num_results=3):
-    print(f"Wyszukiwanie FAISS dla: {query_text} (top-{num_results} wyników)")
-
-    if faiss_index is None or documents is None:
-        return {"error": "Baza hybrydowa nie została poprawnie załadowana"}
-
-    query_embedding = text_to_embedding(query_text, faiss_index.d)
-    _, indices = faiss_index.search(np.array([query_embedding]), k=num_results)
-
+def search_faiss(base_path, query, top_k=3):
+    faiss_index, documents = load_hybrid_database(base_path)
+    query_embedding = text_to_embedding(query, faiss_index.d)
+    _, indices = faiss_index.search(np.array([query_embedding]), k=top_k)
     results = [documents[i] for i in indices[0] if i in documents]
     return results
 
-@app.route(f'/{server_name}/process', methods=['POST'])
-def process_request():
+# === ROUTES ===
+
+@app.route(f"/{server_name}/process", methods=["POST"])
+def process_embedding_request():
     try:
-        print("Odebrano zapytanie do serwera!")
+        data = request.get_json()
+        query = data.get("query")
+        base_path = data.get("basePath")
 
-        raw_data = request.data.decode("utf-8").strip()
-        print(f"Otrzymany tekst: {raw_data}")
+        if not query or not base_path:
+            return jsonify({"error": "Missing 'query' or 'basePath' in request."}), 400
 
-        if not raw_data:
-            return jsonify({"error": "Zapytanie nie może być puste"}), 400
-
-        print(f"Wyszukiwanie dla zapytania: '{raw_data}'")
-        results = search_faiss(raw_data)
-
+        results = search_faiss(base_path, query)
         return jsonify({"results": results}), 200
 
     except Exception as e:
-        print(f"BŁĄD przetwarzania zapytania: {e}")
-        print(traceback.format_exc())
-        return jsonify({"error": f"Błąd serwera: {e}"}), 500
+        print(traceback.format_exc(), flush=True)
+        return jsonify({"error": str(e)}), 500
 
-
-
-@app.route(f'/{server_name}/shutdown', methods=['POST'])
+@app.route(f"/{server_name}/shutdown", methods=["POST"])
 def shutdown():
-    print(f"Otrzymano żądanie zamknięcia serwera {server_name}")
-    func = request.environ.get('werkzeug.server.shutdown')
-    if func is None:
-        raise RuntimeError("Nie można zamknąć serwera.")
-    func()
-    return "Serwer zamknięty", 200
+    def shutdown_server():
+        os._exit(0)
+    threading.Thread(target=shutdown_server).start()
+    return jsonify({"message": "Shutting down server"}), 200
 
-if __name__ == '__main__':
-    print(f"Uruchamianie serwera {server_name}...")
-    if load_hybrid_database():
-        print("Baza danych załadowana poprawnie000000000!")
-        print(server_name)
-    else:
-        print("Nie udało się załadować bazy!")
+@app.route("/status", methods=["GET"])
+def status():
+    return jsonify({"status": "running"}), 200
 
-    threading.Thread(target=notify_spring_boot, daemon=True).start()
+# === START ===
 
-    app.run(host='0.0.0.0', port=port, debug=False)
+def run_server():
+    threading.Thread(target=notify_spring_boot).start()
+    print(f"Server running on port {port}", flush=True)
+    app.run(host="0.0.0.0", port=port)
+
+if __name__ == "__main__":
+    run_server()
