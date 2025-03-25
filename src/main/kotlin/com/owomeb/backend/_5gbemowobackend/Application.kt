@@ -1,25 +1,9 @@
 package com.owomeb.backend._5gbemowobackend
 
-import kotlin.concurrent.thread
-import com.owomeb.backend._5gbemowobackend.baseCreators.FlaskServerService
-import com.owomeb.backend._5gbemowobackend.pythonServerModel.NewEmbeddingManager
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import org.springframework.boot.ApplicationArguments
-import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.ApplicationContext
-import org.springframework.context.annotation.Bean
 import org.springframework.scheduling.annotation.EnableAsync
-import org.springframework.stereotype.Component
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
-import java.io.File
-import org.springframework.context.event.ContextRefreshedEvent
-import org.springframework.context.event.EventListener
-import org.springframework.stereotype.Controller
-import org.springframework.web.bind.annotation.RestController
 
 
 @EnableAsync
