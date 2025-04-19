@@ -1,21 +1,19 @@
 package com.owomeb.backend._5gbemowobackend.hybridbase.builder
 
 import com.owomeb.backend._5gbemowobackend.core.AppPathsConfig
+import com.owomeb.backend._5gbemowobackend.helpers.NewMarkDowns
 import com.owomeb.backend._5gbemowobackend.hybridbase.registry.BaseService
 import com.owomeb.backend._5gbemowobackend.hybridbase.registry.BaseStatus
-import com.owomeb.backend._5gbemowobackend.hybridbase.retrieval.HybridSearchService
 import java.util.concurrent.TimeUnit
-
-
+import kotlin.system.exitProcess
 
 
 class CommissionForCreatingDB(private val baseService: BaseService,
                               private val appPathsConfig: AppPathsConfig,
                               private val normaManager: NormManager,
-                              private val markDownManager: MarkdownManager,
+                              private val markDownManager: NewMarkDowns,
                               private val embeddingManager: NewEmbeddingManager,
                               private val hybridDbCreator: HybridDbCreator,
-                              private val hybridSearchService: HybridSearchService,
                               val baseID: Long,
                               val sourceUrl: String,
                               commissionStatus: CommissionStatus = CommissionStatus.INITIAL
@@ -45,7 +43,9 @@ class CommissionForCreatingDB(private val baseService: BaseService,
     private fun download() {
         println("Downloading for $baseID...")
         baseService.updateStatus(baseID, BaseStatus.PROCESSING, "Pobieranie dokumentu")
-        normaManager.downloadAndExtractNorm(sourceUrl, zipPath = appPathsConfig.getZipPath(baseID.toString()),
+        normaManager.downloadAndExtractNorm(
+            normUrl = sourceUrl,
+            zipPath = appPathsConfig.getZipPath(baseID.toString()),
             docPath = appPathsConfig.getDocPath(baseID.toString())
         )
         commissionStatus = CommissionStatus.DOWNLOADED
@@ -54,10 +54,9 @@ class CommissionForCreatingDB(private val baseService: BaseService,
     private fun markdown() {
         println("Markdowning for $baseID...")
         baseService.updateStatus(baseID, BaseStatus.PROCESSING, "robienie markdown")
-        markDownManager.convertDocToMarkdown(
-            docPath = appPathsConfig.getDocPath(baseID.toString()),
-            markdownPath = appPathsConfig.getMarkdownPath(baseID.toString()),
-            pureMarkdownPath = appPathsConfig.getPureMarkdownPath(baseID.toString())
+        markDownManager.convertDocumentToMarkdown(
+            normPath = appPathsConfig.getDocPath(baseID.toString()),
+            markdownPath = appPathsConfig.getMarkdownPath(baseID.toString())
         )
         TimeUnit.SECONDS.sleep(5)
         commissionStatus = CommissionStatus.MARKDOWNED
@@ -66,11 +65,11 @@ class CommissionForCreatingDB(private val baseService: BaseService,
     private fun chunk() {
         println("Chunking for $baseID...")
         baseService.updateStatus(baseID, BaseStatus.PROCESSING, "robienie chuk chunk")
-        val chunker = ChunkyChunker(
-            pureMarkdownPath = appPathsConfig.getPureMarkdownPath(baseID.toString()),
+        val chunker = UltraChunkyChunker(
+            pureMarkdownPath = appPathsConfig.getMarkdownPath(baseID.toString()),
             outputPath = appPathsConfig.getChunkedJsonPath(baseID.toString())
         )
-        chunker.chunkThat()
+        chunker.process()
         TimeUnit.SECONDS.sleep(3)
         commissionStatus = CommissionStatus.CHUNKED
     }
@@ -85,7 +84,7 @@ class CommissionForCreatingDB(private val baseService: BaseService,
         )
     }
 
-    private fun hybridBase() {
+    fun hybridBase() {
         println("Creating hybrid base for $baseID")
         baseService.updateStatus(baseID, BaseStatus.PROCESSING, "Tworzenie bazy hybrydowej")
         hybridDbCreator.createDb(

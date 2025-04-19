@@ -35,9 +35,15 @@ def process_embedding_request():
         if not os.path.isfile(input_file):
             return jsonify({"error": f"Input file does not exist: {input_file}"}), 400
 
-        # Wczytaj linie
+
+        # Wczytaj plik JSON z chunkami
         with open(input_file, "r", encoding="utf-8") as f:
-            lines = [line.strip() for line in f if line.strip()]
+            json_data = json.load(f)
+
+        lines = json_data.get("chunks", [])
+        if not isinstance(lines, list) or not all(isinstance(line, str) for line in lines):
+            return jsonify({"error": "'chunks' must be a list of strings in input JSON"}), 400
+
 
         total = len(lines)
         if total == 0:
@@ -60,10 +66,11 @@ def process_embedding_request():
             # Zapis tymczasowy co 100 chunków
             if i % 100 == 0 or i == total:
                 with open(output_file, "w", encoding="utf-8") as f_out:
-                    json.dump(results, f_out, ensure_ascii=False, indent=2)
-                print(f"💾 Zapisano {i} elementów do pliku tymczasowo ({output_file})", flush=True)
+                    json.dump({"embeddedChunks": results}, f_out, ensure_ascii=False, indent=2)
 
-        print(f"✅ Embedding zakończony. Finalnie zapisano {len(results)} elementów do {output_file}", flush=True)
+        print(f"Zapisano {i} elementów do pliku tymczasowo ({output_file})", flush=True)
+
+        print(f"Embedding zakończony. Finalnie zapisano {len(results)} elementów do {output_file}", flush=True)
         return jsonify({"message": "Embedding completed", "output": output_file}), 200
 
     except Exception as e:

@@ -50,14 +50,19 @@ class NormManager {
     }
 
     private fun extractZip(zipFile: File, docPath: String): Boolean {
+        println("ZipPath: ${zipFile.absolutePath}")
+        println("DocPath (bez rozszerzenia): $docPath")
+
         return try {
             ZipInputStream(FileInputStream(zipFile)).use { zipInputStream ->
                 var zipEntry = zipInputStream.nextEntry
                 var docFile: File? = null
 
                 while (zipEntry != null) {
-                    if (zipEntry.name.endsWith(".doc")) {
-                        docFile = File(docPath)
+                    if (zipEntry.name.endsWith(".doc", ignoreCase = true) || zipEntry.name.endsWith(".docx", ignoreCase = true)) {
+                        val extension = if (zipEntry.name.endsWith(".docx", ignoreCase = true)) ".docx" else ".doc"
+                        docFile = File(docPath + extension)
+                        println("ZIP jest rozpakowywany jako jako: ${docFile.name}")
                         FileOutputStream(docFile).use { outputStream ->
                             zipInputStream.copyTo(outputStream)
                         }
@@ -69,8 +74,9 @@ class NormManager {
                 docFile?.exists() == true
             }
         } catch (e: Exception) {
-            println("Błąd podczas rozpakowywania ZIP: ${e.message}")
+            println("Błąd rozpakowywania ZIP: ${e.message}")
             false
         }
     }
+
 }

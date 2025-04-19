@@ -1,5 +1,7 @@
 package com.owomeb.backend._5gbemowobackend.core
 
+import com.owomeb.backend._5gbemowobackend.api.BaseController
+import com.owomeb.backend._5gbemowobackend.helpers.NewMarkDowns
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
@@ -8,7 +10,10 @@ import kotlin.system.exitProcess
 
 @Component
 class ServerStartupManager(
+    private val baseController: BaseController,
+    private val newMarkDowns: NewMarkDowns
 ) {
+
     private val zipPath = "src/main/resources/norms3/norma.zip"
     private val markdownPath = "src/main/resources/norms3/36331-e60.md"
     private val pureMarkdownPath = "src/main/resources/norms3/36331-e60_pure.md"
@@ -23,8 +28,14 @@ class ServerStartupManager(
 
     fun serverStartup() {
 println("Hello World!")
+
+
+
+
         //commissionService.startCommission(26, "request.sourceUrl")
-        //lbaseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-e60.zip")
+        //baseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-g30.zip")
+        //baseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-e60.zip")
+
     }
 
 

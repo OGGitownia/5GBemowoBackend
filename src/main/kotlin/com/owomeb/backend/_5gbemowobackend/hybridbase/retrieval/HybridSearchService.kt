@@ -44,7 +44,9 @@ class HybridSearchService: PythonServerModel<HybridSearchService.queueItem>(
         }
 
         println("Result of hybrid search for: $item  is  \n $cleanResult")
+        item.question.context = cleanResult
         item.question.questionStatus = QuestionStatus.WITH_GATHERED_CONTEXT
+
 
         //val newQuery = LamoAsker.AugmentedQuery(context = cleanResult, question = item)
         //lamoAsker.addToQueue(newQuery)

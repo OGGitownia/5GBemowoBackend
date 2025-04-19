@@ -24,7 +24,7 @@ class AppPathsConfig {
     }
 
     fun getDocPath(normName: String): String {
-        return "${getNormDirectory(normName)}/norm.doc"
+        return "${getNormDirectory(normName)}/norm"
     }
 
     fun getEmbeddedJsonPath(normName: String): String {
@@ -36,5 +36,8 @@ class AppPathsConfig {
     }
     fun getHybridBaseDirectory(normName: String): String {
         return "${getNormDirectory(normName)}/hybrid_base"
+    }
+    fun getHistoryPath(): String {
+        return "src/main/resources/history/historyOneOne.txt"
     }
 }

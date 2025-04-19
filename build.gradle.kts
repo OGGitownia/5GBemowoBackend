@@ -23,8 +23,12 @@ repositories {
 
 dependencies {
 
+    implementation("org.apache.poi:poi-scratchpad:5.2.5")
+    implementation("commons-io:commons-io:2.15.1")
 
 
+    implementation("org.apache.poi:poi-scratchpad:5.2.5")
+    implementation("commons-io:commons-io:2.15.1")
     implementation("org.springframework.boot:spring-boot-starter-websocket")
     implementation("org.postgresql:postgresql:42.7.5")
     implementation("org.springframework.boot:spring-boot-starter-actuator")

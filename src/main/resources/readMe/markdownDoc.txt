@@ -1,0 +1,189 @@
+# Zasady formatowania w wzorcowym pliku Markdown (.md)
+
+Ten plik opisuje wszystkie podstawowe zasady i znaki stosowane w poprawnym pliku Markdown, który ma służyć jako dokumentacja techniczna (np. 3GPP RRC, LTE itp.)
+
+---
+
+## 1. Nagłówki
+
+Używamy znaków # na początku linii:
+
+#     Nagłówek 1. poziomu
+##    Nagłówek 2. poziomu
+###   Nagłówek 3. poziomu
+####  Nagłówek 4. poziomu
+
+Przykład:
+
+### 5.3.5.2 RRCConnectionSetup
+
+---
+
+## 2. Akapity
+
+Akapity oddzielamy pustą linią. Nie ma potrzeby wcięć ani specjalnych znaków.
+
+Przykład:
+
+This is the first paragraph.
+
+This is the second paragraph.
+
+---
+
+## 3. Listy wypunktowane
+
+Listy punktowane tworzymy z użyciem:
+
+- `-` (myślnik)
+- `*` (gwiazdka)
+
+Przykład:
+
+- First item
+- Second item
+  - Sub-item
+
+---
+
+## 4. Listy numerowane
+
+Listy numerowane zapisujemy z użyciem:
+
+1. Pierwszy punkt
+2. Drugi punkt
+   1. Podpunkt
+
+Uwaga: wszystkie punkty mogą być zapisane jako `1.` — parser sam ponumeruje (GitHub, Obsidian, VSCode itd.).
+
+---
+
+## 5. Cytaty
+
+Cytaty zapisujemy z użyciem znaku `>` na początku linii.
+
+Przykład:
+
+> This is an important note.
+> It spans multiple lines.
+
+---
+
+## 6. Kod i polecenia
+
+### Kod jednowierszowy:
+
+Użyj ` (backtick) wokół kodu:
+
+Przykład: `RRCConnectionRequest`
+
+### Blok kodu:
+
+Trzy znaki backtick przed i po fragmencie kodu:
+
+''' if (condition) {
+doSomething()
+} '''
+---
+
+## 7. Wstawianie obrazków
+
+Obrazki wstawiamy tak:
+
+`![Opis alternatywny](ścieżka/do/obrazu.png)`
+
+Przykład:
+
+![Wzór 1](equation1.png)
+
+Pliki obrazów powinny znajdować się w tym samym folderze co `.md` lub w podfolderze `images/`.
+
+---
+
+## 8. Linie poziome
+
+Trzy minusy `---` tworzą poziomą linię (rozdzielacz).
+
+Przykład:
+
+---
+
+## 9. Linki
+
+Linki mają postać:
+
+[tekst](https://adres)
+
+Przykład:
+
+[3GPP Official Site](https://www.3gpp.org)
+
+---
+
+## 10. Styl tekstu
+
+- *Kursywa* = `*tekst*` lub `_tekst_`
+- **Pogrubienie** = `**tekst**`
+- ***Pogrubiona kursywa*** = `***tekst***`
+
+---
+
+## 11. Komentarze (niewidoczne)
+
+Markdown nie obsługuje komentarzy natively, ale możesz użyć HTML:
+
+<!-- To jest komentarz niewidoczny w renderze -->
+
+---
+
+## 12. Tabele (opcjonalnie)
+
+Można tworzyć tabele, np.:
+
+| Parametr | Wartość |
+|----------|---------|
+| T310     | 100 ms  |
+| T311     | 1000 ms |
+
+---
+
+## 13. Znaki specjalne Worda – NIEPOŻĄDANE
+
+Usuń lub zamień:
+
+- `\u0013`, `\u0014`, `\u0015` – znaczniki pola Word
+- `EMBED Equation`, `EMBED Picture` – zamień na `![Equation X](equationX.png)`
+
+---
+
+## 14. Przykład fragmentu wzorcowego Markdowna
+
+### 5.5.4.12 Event W2 (All WLAN inside WLAN mobility set becomes worse...)
+
+The UE shall:
+
+1. The entering condition for this event is satisfied when:
+   - Condition W2-1 is fulfilled
+   - Condition W2-2 is fulfilled
+2. The leaving condition for this event is satisfied when:
+   - Condition W2-3 **or** W2-4 is fulfilled
+
+![Equation W2-1](equation_w2_1.png)
+
+> Mn is expressed in dBm.
+
+---
+
+## 15. Spis treści (jeśli potrzebny)
+
+Można wygenerować automatycznie np. w VS Code lub wstawić ręcznie:
+
+- [1 Scope](#1-scope)
+- [2 References](#2-references)
+- [3 Definitions](#3-definitions)
+- [5.5.4.12 Event W2](#55412-event-w2)
+
+---
+
+## Koniec
+Ten dokument służy jako referencja do generowania i czyszczenia plików Markdown na potrzeby dokumentacji technicznej.

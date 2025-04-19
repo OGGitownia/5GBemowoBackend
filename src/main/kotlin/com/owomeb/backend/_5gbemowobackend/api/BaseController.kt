@@ -40,7 +40,8 @@ class BaseController(
     @GetMapping("/available-norms")
     fun getAvailableNorms(): ResponseEntity<List<String>> {
         println("asked")
-        val norms = listOf("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-e60.zip")
+        val norms = listOf("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-e60.zip",
+            "https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-g30.zip")
         return ResponseEntity.ok(norms)
     }
 

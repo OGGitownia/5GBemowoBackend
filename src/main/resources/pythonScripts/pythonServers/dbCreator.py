@@ -16,7 +16,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 app = Flask(__name__)
 
-server_name = sys.argv[1] if len(sys.argv) > 1 else "serverTemplete "
+server_name = sys.argv[1] if len(sys.argv) > 1 else "serverTemplete"
 port = int(sys.argv[2]) if len(sys.argv) > 2 else 5003
 
 SPRING_BOOT_NOTIFY = f"http://localhost:8080/{server_name}/server-ready"
@@ -24,62 +24,79 @@ SPRING_BOOT_NOTIFY = f"http://localhost:8080/{server_name}/server-ready"
 
 
 
-
 @app.route(f"/{server_name}/process", methods=["POST"])
 def process_embedding_request():
-    print("process_embedding_request", flush=True)
+    print("[START] process_embedding_request", flush=True)
     try:
         data = request.get_json()
-        print(f"Dane wejściowe: {data}", flush=True)
+        print("[INFO] Odebrano JSON z żądania.", flush=True)
+        print(f"[DATA] Dane wejściowe: {data}", flush=True)
 
         input_path = data.get("inputPath")
         output_path = data.get("outputPath")
 
+        print(f"[INFO] inputPath = {input_path}", flush=True)
+        print(f"[INFO] outputPath = {output_path}", flush=True)
+
         if not input_path or not output_path:
+            print("[ERROR] Brakuje inputPath lub outputPath", flush=True)
             return jsonify({"error": "Brakuje pola 'inputPath' lub 'outputPath'"}), 400
 
         if not os.path.exists(input_path):
+            print(f"[ERROR] Plik wejściowy nie istnieje: {input_path}", flush=True)
             return jsonify({"error": f"Plik wejściowy nie istnieje: {input_path}"}), 400
 
         if not os.path.exists(output_path):
-            print(f"Tworzę katalog: {output_path}", flush=True)
+            print(f"[INFO] Tworzę katalog: {output_path}", flush=True)
             os.makedirs(output_path)
 
-        # Wczytaj dane – TERAZ lista obiektów, nie dict
+        print("[INFO] Otwieram plik JSON z embeddingami...", flush=True)
         with open(input_path, "r", encoding="utf-8") as f:
-            fragments = json.load(f)
+            json_data = json.load(f)
 
-        if not isinstance(fragments, list):
-            return jsonify({"error": "Plik JSON nie jest listą fragmentów"}), 400
+            # Obsługa obu wariantów (lista lub obiekt z embeddedChunks)
+            if isinstance(json_data, dict) and "embeddedChunks" in json_data:
+                fragments = json_data["embeddedChunks"]
+            elif isinstance(json_data, list):
+                fragments = json_data
+            else:
+                return jsonify(
+                    {"error": "Nieprawidłowa struktura JSON: oczekiwano listy lub pola 'embeddedChunks'"}), 400
 
         sentences = []
         embeddings = []
 
-        for entry in fragments:
+        for i, entry in enumerate(fragments):
             if "content" not in entry or "embeddedContent" not in entry:
+                print(f"[ERROR] Fragment {i} nie ma klucza 'content' lub 'embeddedContent': {entry}", flush=True)
                 return jsonify({"error": "Niektóre fragmenty nie mają 'content' lub 'embeddedContent'"}), 400
             sentences.append(entry["content"])
             embeddings.append(entry["embeddedContent"])
 
+        print("[INFO] Konwersja embeddingów do tablicy numpy...", flush=True)
         embeddings = np.array(embeddings).astype('float32')
         if embeddings.size == 0:
+            print("[ERROR] Brak embeddingów w danych wejściowych", flush=True)
             return jsonify({"error": "Brak embeddingów"}), 400
 
         dimension = embeddings.shape[1]
-        print(f"Liczba zdań: {len(sentences)}, Wymiar: {dimension}", flush=True)
+        print(f"[INFO] Liczba zdań: {len(sentences)}, Wymiar embeddingów: {dimension}", flush=True)
 
         # FAISS
+        print("[INFO] Tworzenie i zapisywanie indeksu FAISS...", flush=True)
         index = faiss.IndexFlatL2(dimension)
         index.add(embeddings)
         index_path = os.path.join(output_path, "hybrid_db.index")
         faiss.write_index(index, index_path)
-        print(f"Indeks FAISS zapisany: {index_path}", flush=True)
+        print(f"[SUCCESS] Indeks FAISS zapisany: {index_path}", flush=True)
 
         # SQLite
         db_path = os.path.join(output_path, "hybrid_db.sqlite")
         if os.path.exists(db_path):
+            print(f"[INFO] Usuwam istniejącą bazę SQLite: {db_path}", flush=True)
             os.remove(db_path)
 
+        print("[INFO] Tworzenie bazy SQLite...", flush=True)
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute("CREATE TABLE documents (id INTEGER PRIMARY KEY, sentence TEXT)")
@@ -89,18 +106,16 @@ def process_embedding_request():
 
         conn.commit()
         conn.close()
-        print(f"Baza SQLite zapisana: {db_path}", flush=True)
+        print(f"[SUCCESS] Baza SQLite zapisana: {db_path}", flush=True)
 
-        print("✅ Baza hybrydowa utworzona", flush=True)
+        print("[SUCCESS] Baza hybrydowa została pomyślnie utworzona", flush=True)
         return jsonify({"message": "Hybrid database created successfully"}), 200
 
     except Exception as e:
         import traceback
-        print("❌ Błąd podczas tworzenia bazy:", flush=True)
+        print("[EXCEPTION] Błąd podczas tworzenia bazy:", flush=True)
         print(traceback.format_exc(), flush=True)
         return jsonify({"error": str(e)}), 500
-
-
 
 
 @app.route(f"/{server_name}/shutdown", methods=["POST"])

@@ -30,6 +30,7 @@ class NewEmbeddingManager : PythonServerModel<NewEmbeddingManager.queueElement>(
 
     override fun publishResult(result: String, item: queueElement) {
         item.currentlyHandledOrder.commissionStatus = CommissionStatus.EMBEDDED
+        item.currentlyHandledOrder.hybridBase()
         println("Item wassss: $item")
         println("Wynik przetwarzania z serwera $serverName: $result")
     }

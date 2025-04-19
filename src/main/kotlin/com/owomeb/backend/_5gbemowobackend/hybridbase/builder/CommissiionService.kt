@@ -2,6 +2,7 @@ package com.owomeb.backend._5gbemowobackend.hybridbase.builder
 
 
 import com.owomeb.backend._5gbemowobackend.core.AppPathsConfig
+import com.owomeb.backend._5gbemowobackend.helpers.NewMarkDowns
 import com.owomeb.backend._5gbemowobackend.hybridbase.builder.*
 import com.owomeb.backend._5gbemowobackend.hybridbase.registry.BaseService
 import com.owomeb.backend._5gbemowobackend.hybridbase.retrieval.HybridSearchService
@@ -13,7 +14,7 @@ class CommissionService(
     private val baseService: BaseService,
     private val appPathsConfig: AppPathsConfig,
     private val normManager: NormManager,
-    private val markdownManager: MarkdownManager,
+    private val markdownManager: NewMarkDowns,
     private val embeddingManager: NewEmbeddingManager,
     private val hybridDbCreator: HybridDbCreator,
     private val hybridSearchService: HybridSearchService,
@@ -27,7 +28,6 @@ class CommissionService(
             normaManager = normManager,
             markDownManager = markdownManager,
             embeddingManager = embeddingManager,
-            hybridSearchService = hybridSearchService,
             baseID = baseID,
             sourceUrl = sourceUrl,
             hybridDbCreator = hybridDbCreator,

@@ -16,10 +16,10 @@ SPRING_BOOT_READY_URL = f"http://localhost:8080/{server_name}/server-ready"
 
 app = Flask(server_name)
 
-# Konfiguracja modelu Ollama z LangChain
+
 model = OllamaLLM(model="llama3")
 
-# Szablon prompta
+
 PROMPT_TEMPLATE = """
 Answer the question based only on the following context:
 
@@ -47,7 +47,6 @@ threading.Thread(target=notify_spring_boot, daemon=True).start()
 
 @app.route(f'/{server_name}/process', methods=['POST'])
 def process_request():
-    """ Obsługa zapytań użytkownika przez Ollama. """
     print("Odebrano zapytanie...", flush=True)
 
     try:
@@ -74,8 +73,11 @@ def generate_response(context, question):
     """ Generowanie odpowiedzi za pomocą LangChain + Ollama """
     prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
     prompt = prompt_template.format(context=context, question=question)
+    print(f"{context}", flush=True)
+    print(f"{question}", flush=True)
+    print(f"{prompt}", flush=True)
 
-    print(f"📤 Wysyłanie zapytania do Ollama:\n{prompt}", flush=True)
+    print(f"Wysyłanie zapytania do Ollama:\n{prompt}", flush=True)
 
     response_text = model.invoke(prompt)
 
