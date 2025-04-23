@@ -30,8 +30,8 @@ def process_embedding_request():
         print(f"Received JSON: {data}", flush=True)
 
         input_path = data.get("input")
-        output_docx_path = data.get("outputDocx")
-        output_dir_path = data.get("outputDir")
+        output_docx_path = data.get("outputDir")
+        output_dir_path = data.get("outputDocx")
 
         print(f"Input path: {input_path}", flush=True)
         print(f"Output DOCX path: {output_docx_path}", flush=True)
@@ -140,7 +140,8 @@ def extract_images_and_replace_drawings(docx_path: str, output_docx_path2:str ,o
     tree.write(document_xml_path, encoding="utf-8", xml_declaration=True, pretty_print=True)
 
     # 5. Spakuj ponownie do nowego .docx
-    output_docx_path = os.path.join(output_docx_path2, "modified_with_image_refs.docx")
+    output_docx_path = os.path.join(output_docx_path2)
+    output_docx_path += ".docx"
     with zipfile.ZipFile(output_docx_path, 'w', zipfile.ZIP_DEFLATED) as docx:
         for foldername, subfolders, filenames in os.walk(temp_dir):
             for filename in filenames:

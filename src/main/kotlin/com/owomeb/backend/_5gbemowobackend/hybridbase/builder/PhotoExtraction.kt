@@ -6,6 +6,7 @@ import com.owomeb.backend._5gbemowobackend.answering.Question
 import com.owomeb.backend._5gbemowobackend.answering.QuestionStatus
 import com.owomeb.backend._5gbemowobackend.architectureMasterpiece.PythonServerModel
 import org.springframework.web.bind.annotation.*
+import java.nio.file.Paths
 
 
 @RestController
@@ -21,8 +22,11 @@ class PhotoExtraction : PythonServerModel<PhotoExtraction.AugmentedQuery>(
         return super.markServerAsReady(body)
     }
 
+
+
     fun extract(input: String, outputDocx: String, outputDir: String) {
-        val augmentedQuery = AugmentedQuery(input, outputDir, outputDocx)
+        val absoluteInput = Paths.get(input).toAbsolutePath().toString() + ".docx"
+        val augmentedQuery = AugmentedQuery(absoluteInput, outputDir, outputDocx)
         this.addToQueue(augmentedQuery)
     }
 

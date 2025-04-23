@@ -62,7 +62,7 @@ class CommissionForCreatingDB(private val baseService: BaseService,
             outputDir = appPathsConfig.getNormDirectory(baseID.toString()),
         )
         println("początek")
-        TimeUnit.SECONDS.sleep(20)
+        TimeUnit.SECONDS.sleep(80)
         println("po uśpieniu")
         commissionStatus = CommissionStatus.EXTRACTED
 
