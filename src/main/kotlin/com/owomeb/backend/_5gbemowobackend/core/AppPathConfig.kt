@@ -40,4 +40,7 @@ class AppPathsConfig {
     fun getHistoryPath(): String {
         return "src/main/resources/history/historyOneOne.txt"
     }
+    fun getPhotoExtractedDocx(normName: String): String{
+        return "${getNormDirectory(normName)}/normAsDocxWithAfterExtraction.docx"
+    }
 }

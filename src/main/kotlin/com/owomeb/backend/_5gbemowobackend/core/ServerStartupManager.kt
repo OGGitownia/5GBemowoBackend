@@ -2,6 +2,7 @@ package com.owomeb.backend._5gbemowobackend.core
 
 import com.owomeb.backend._5gbemowobackend.api.BaseController
 import com.owomeb.backend._5gbemowobackend.helpers.NewMarkDowns
+import com.owomeb.backend._5gbemowobackend.hybridbase.builder.DocxPhotoExtractor
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
@@ -11,7 +12,8 @@ import kotlin.system.exitProcess
 @Component
 class ServerStartupManager(
     private val baseController: BaseController,
-    private val newMarkDowns: NewMarkDowns
+    private val newMarkDowns: NewMarkDowns,
+    private val appPathsConfig: AppPathsConfig
 ) {
 
     private val zipPath = "src/main/resources/norms3/norma.zip"
@@ -35,6 +37,13 @@ println("Hello World!")
         //commissionService.startCommission(26, "request.sourceUrl")
         //baseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-g30.zip")
         //baseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-e60.zip")
+            val extractor = DocxPhotoExtractor(
+                inputDocxPath = "C:\\Users\\Pc\\Downloads\\pliczek.docx",
+                outputDirPath = appPathsConfig.getNormDirectory("-2"),
+                outputDocxPath = appPathsConfig.getPhotoExtractedDocx("-2")
+            )
+
+            extractor.runPhotoAction()
 
     }
 
