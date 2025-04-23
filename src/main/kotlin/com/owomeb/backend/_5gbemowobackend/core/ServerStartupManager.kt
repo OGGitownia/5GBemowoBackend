@@ -35,12 +35,12 @@ println("Hello World!")
 
 
         //commissionService.startCommission(26, "request.sourceUrl")
-        //baseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-g30.zip")
+        baseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-g30.zip")
         //baseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-e60.zip")
             val extractor = DocxPhotoExtractor(
-                inputDocxPath = "C:\\Users\\Pc\\Downloads\\pliczek.docx",
-                outputDirPath = appPathsConfig.getNormDirectory("-2"),
-                outputDocxPath = appPathsConfig.getPhotoExtractedDocx("-2")
+                inputDocxPath = "C:\\gitRepositories\\5GBemowo\\5GBemowoBackend\\src\\main\\resources\\data\\52\\norm.docx",
+                outputDirPath = appPathsConfig.getNormDirectory("-5"),
+                outputDocxPath = appPathsConfig.getPhotoExtractedDocx("-5")
             )
 
             extractor.runPhotoAction()
