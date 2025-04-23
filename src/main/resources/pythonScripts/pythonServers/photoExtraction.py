@@ -1,11 +1,14 @@
 from flask import Flask, request, jsonify
 from sentence_transformers import SentenceTransformer
 import threading
-import os
 import signal
 import sys
-import json
 import requests
+import zipfile
+import os
+import shutil
+from lxml import etree as ET
+
 
 sys.stdout.reconfigure(encoding='utf-8')
 
