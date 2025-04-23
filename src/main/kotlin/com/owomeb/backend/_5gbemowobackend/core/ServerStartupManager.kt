@@ -38,9 +38,9 @@ println("Hello World!")
         baseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-g30.zip")
         //baseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-e60.zip")
             val extractor = DocxPhotoExtractor(
-                inputDocxPath = "C:\\gitRepositories\\5GBemowo\\5GBemowoBackend\\src\\main\\resources\\data\\52\\norm.docx",
-                outputDirPath = appPathsConfig.getNormDirectory("-5"),
-                outputDocxPath = appPathsConfig.getPhotoExtractedDocx("-5")
+                inputDocxPath = "C:\\Users\\Pc\\Downloads\\obrrazkitest.docx",
+                outputDirPath = appPathsConfig.getNormDirectory("-6"),
+                outputDocxPath = appPathsConfig.getPhotoExtractedDocx("-6")
             )
 
             extractor.runPhotoAction()
