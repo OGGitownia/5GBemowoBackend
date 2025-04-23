@@ -18,6 +18,7 @@ class CommissionService(
     private val embeddingManager: NewEmbeddingManager,
     private val hybridDbCreator: HybridDbCreator,
     private val hybridSearchService: HybridSearchService,
+    private val photoExtraction: PhotoExtraction
 ) {
 
     @Async
@@ -31,7 +32,8 @@ class CommissionService(
             baseID = baseID,
             sourceUrl = sourceUrl,
             hybridDbCreator = hybridDbCreator,
-            commissionStatus = CommissionStatus.EMBEDDED
+            commissionStatus = CommissionStatus.EMBEDDED,
+            photoExtraction = photoExtraction
         )
 
         //commission.commissionStatus = CommissionStatus.INITIAL

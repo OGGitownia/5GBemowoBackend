@@ -11,6 +11,7 @@ import kotlin.system.exitProcess
 class CommissionForCreatingDB(private val baseService: BaseService,
                               private val appPathsConfig: AppPathsConfig,
                               private val normaManager: NormManager,
+                              private val photoExtraction: PhotoExtraction,
                               private val markDownManager: NewMarkDowns,
                               private val embeddingManager: NewEmbeddingManager,
                               private val hybridDbCreator: HybridDbCreator,
@@ -29,13 +30,15 @@ class CommissionForCreatingDB(private val baseService: BaseService,
                 field = value
 
                 when (value) {
-                    CommissionStatus.DOWNLOADED -> markdown()
+                    CommissionStatus.DOWNLOADED -> extract()
+                    CommissionStatus.EXTRACTED -> markdown()
                     CommissionStatus.MARKDOWNED -> chunk()
                     CommissionStatus.CHUNKED -> embed()
                     CommissionStatus.EMBEDDED -> hybridBase()
                     CommissionStatus.HYBRID_BASED -> finalize()
                     CommissionStatus.DONE -> println("Processing completed for $baseID.")
                     CommissionStatus.INITIAL -> {}
+
                 }
             }
         }
@@ -50,12 +53,24 @@ class CommissionForCreatingDB(private val baseService: BaseService,
         )
         commissionStatus = CommissionStatus.DOWNLOADED
     }
+    private fun extract() {
+        println("Extracting $baseID...")
+        baseService.updateStatus(baseID, BaseStatus.PROCESSING, "extractowanie zdjęć")
+        photoExtraction.extract(
+            input = appPathsConfig.getDocPath(baseID.toString()),
+            outputDocx = appPathsConfig.getExtractedDocx(baseID.toString()),
+            outputDir = appPathsConfig.getNormDirectory(baseID.toString()),
+        )
+        TimeUnit.SECONDS.sleep(10)
+        commissionStatus = CommissionStatus.EXTRACTED
+
+    }
 
     private fun markdown() {
         println("Markdowning for $baseID...")
         baseService.updateStatus(baseID, BaseStatus.PROCESSING, "robienie markdown")
         markDownManager.convertDocumentToMarkdown(
-            normPath = appPathsConfig.getDocPath(baseID.toString()),
+            normPath = appPathsConfig.getExtractedDocx(baseID.toString()),
             markdownPath = appPathsConfig.getMarkdownPath(baseID.toString())
         )
         TimeUnit.SECONDS.sleep(5)
@@ -107,6 +122,7 @@ class CommissionForCreatingDB(private val baseService: BaseService,
 enum class CommissionStatus {
     INITIAL,
     DOWNLOADED,
+    EXTRACTED,
     MARKDOWNED,
     CHUNKED,
     EMBEDDED,

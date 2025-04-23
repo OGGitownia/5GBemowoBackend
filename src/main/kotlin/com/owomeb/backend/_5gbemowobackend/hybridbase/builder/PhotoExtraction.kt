@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*
 
 
 @RestController
-@RequestMapping("/lamo_asker")
+@RequestMapping("/unikalnanazwa")
 class PhotoExtraction : PythonServerModel<PhotoExtraction.AugmentedQuery>(
     scriptPath = "src/main/resources/pythonScripts/pythonServers/photoExtraction.py",
     serverName = "unikalnanazwa",
@@ -26,10 +26,9 @@ class PhotoExtraction : PythonServerModel<PhotoExtraction.AugmentedQuery>(
         this.addToQueue(augmentedQuery)
     }
 
-    private val mapper = jacksonObjectMapper()
-
     override fun publishResult(result: String, item: AugmentedQuery) {
         println("print z metody published result na koniec dzialania ")
+
 
     }
 

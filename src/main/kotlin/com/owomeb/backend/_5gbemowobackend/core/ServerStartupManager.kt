@@ -35,8 +35,9 @@ println("Hello World!")
 
 
         //commissionService.startCommission(26, "request.sourceUrl")
-        baseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-g30.zip")
+        //baseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-g30.zip")
         //baseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-e60.zip")
+        /*
             val extractor = DocxPhotoExtractor(
                 inputDocxPath = "C:\\Users\\Pc\\Downloads\\obrrazkitest.docx",
                 outputDirPath = appPathsConfig.getNormDirectory("-6"),
@@ -44,6 +45,8 @@ println("Hello World!")
             )
 
             extractor.runPhotoAction()
+
+         */
 
     }
 
