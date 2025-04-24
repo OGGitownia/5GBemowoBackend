@@ -21,6 +21,12 @@ model = OllamaLLM(model="llama3")
 
 
 PROMPT_TEMPLATE = """
+if there is a extract which looks like photo_X.format where X is a number and format is .png or .emf it is a photo code. 
+Place the the number of that photo at the end of the answer. Give as specific answers as possible. 
+Remember to place photo code at the bottom exactly in the same format as it is present in context.
+And to make it clear i want see somthing like photo_2.emf not like photo_2.format
+Photo code should be written in lowercase
+
 Answer the question based only on the following context:
 
 {context}
@@ -70,7 +76,6 @@ def process_request():
 
 
 def generate_response(context, question):
-    """ Generowanie odpowiedzi za pomocą LangChain + Ollama """
     prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
     prompt = prompt_template.format(context=context, question=question)
     print(f"{context}", flush=True)
