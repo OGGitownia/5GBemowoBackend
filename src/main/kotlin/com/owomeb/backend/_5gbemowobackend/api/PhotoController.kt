@@ -35,6 +35,7 @@ class PhotoController {
             }
         }
 
+
         if (!Files.exists(targetFile)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body("Plik nie istnieje: $filename")
