@@ -18,6 +18,7 @@ java {
 repositories {
     mavenCentral()
     maven { url = uri("https://oss.sonatype.org/content/repositories/releases/") }
+    maven("https://jcenter.bintray.com/")
 }
 
 
@@ -25,6 +26,8 @@ dependencies {
 
     implementation("org.apache.poi:poi-scratchpad:5.2.5")
     implementation("commons-io:commons-io:2.15.1")
+    implementation("org.freehep:freehep-graphicsio-emf:2.4")
+    implementation("com.google.guava:guava:32.1.2-jre")
 
 
     implementation("org.apache.poi:poi-scratchpad:5.2.5")

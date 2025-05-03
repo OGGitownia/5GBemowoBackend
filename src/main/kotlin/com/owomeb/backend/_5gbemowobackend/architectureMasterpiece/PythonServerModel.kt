@@ -35,7 +35,7 @@ abstract class PythonServerModel<T>(
     private fun startServer() {
         thread {
             try {
-                val processBuilder = ProcessBuilder("python", scriptPath, serverName, actualPort.toString())
+                val processBuilder = ProcessBuilder("C:\\Users\\Pc\\AppData\\Local\\Programs\\Python\\Python311\\python.exe", scriptPath, serverName, actualPort.toString())
                 processBuilder.redirectErrorStream(true)
                 process = processBuilder.start()
                 val reader = process!!.inputStream.bufferedReader()

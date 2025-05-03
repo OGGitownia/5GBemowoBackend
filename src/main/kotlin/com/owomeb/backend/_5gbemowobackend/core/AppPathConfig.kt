@@ -26,6 +26,9 @@ class AppPathsConfig {
     fun getDocPath(normName: String): String {
         return "${getNormDirectory(normName)}/norm"
     }
+    fun getExtractedDocx(normName: String): String {
+        return "${getNormDirectory(normName)}/extractedNorm"
+    }
 
     fun getEmbeddedJsonPath(normName: String): String {
         return "${getNormDirectory(normName)}/embedded_chunks.json"
@@ -40,4 +43,9 @@ class AppPathsConfig {
     fun getHistoryPath(): String {
         return "src/main/resources/history/historyOneOne.txt"
     }
+    fun getPhotoExtractedDocx(normName: String): String{
+        return "${getNormDirectory(normName)}/normAsDocxWithAfterExtraction.docx"
+    }
+
+
 }
