@@ -1,0 +1,15 @@
+###  Get all releases
+GET http://localhost:8080/api/norms/releases
+Accept: application/json
+
+###
+
+###  Get series for a specific release (example: Rel-18)
+GET http://localhost:8080/api/norms/series/Rel-18
+Accept: application/json
+
+###
+
+### Get norms for a specific release and series (example: Rel-18 / 36)
+GET http://localhost:8080/api/norms/norms/Rel-18/36
+Accept: application/json

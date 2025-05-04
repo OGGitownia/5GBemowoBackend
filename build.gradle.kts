@@ -24,6 +24,9 @@ repositories {
 
 dependencies {
 
+    implementation("org.seleniumhq.selenium:selenium-java:4.20.0")
+    implementation("io.github.bonigarcia:webdrivermanager:5.8.0")
+    implementation("org.jsoup:jsoup:1.17.2")
     implementation("org.apache.poi:poi-scratchpad:5.2.5")
     implementation("commons-io:commons-io:2.15.1")
     implementation("org.freehep:freehep-graphicsio-emf:2.4")
