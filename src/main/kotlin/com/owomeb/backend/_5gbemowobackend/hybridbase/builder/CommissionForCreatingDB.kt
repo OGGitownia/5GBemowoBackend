@@ -4,9 +4,7 @@ import com.owomeb.backend._5gbemowobackend.core.AppPathsConfig
 import com.owomeb.backend._5gbemowobackend.helpers.NewMarkDowns
 import com.owomeb.backend._5gbemowobackend.hybridbase.registry.BaseService
 import com.owomeb.backend._5gbemowobackend.hybridbase.registry.BaseStatus
-import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
-import kotlin.system.exitProcess
 
 
 class CommissionForCreatingDB(private val baseService: BaseService,
