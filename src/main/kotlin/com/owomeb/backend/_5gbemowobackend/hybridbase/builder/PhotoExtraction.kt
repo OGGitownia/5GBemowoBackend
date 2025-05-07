@@ -25,7 +25,7 @@ class PhotoExtraction : PythonServerModel<PhotoExtraction.AugmentedQuery>(
 
 
     fun extract(input: String, outputDocx: String, outputDir: String) {
-        val absoluteInput = Paths.get(input).toAbsolutePath().toString() + ".docx"
+        val absoluteInput = Paths.get(input).toAbsolutePath().toString()
         val augmentedQuery = AugmentedQuery(absoluteInput, outputDir, outputDocx)
         this.addToQueue(augmentedQuery)
     }

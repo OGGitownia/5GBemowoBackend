@@ -1,4 +1,4 @@
-package com.owomeb.backend._5gbemowobackend.helpers
+package com.owomeb.backend._5gbemowobackend.hybridbase.builder
 
 import org.apache.poi.hwpf.HWPFDocument
 import org.apache.poi.hwpf.usermodel.PictureType

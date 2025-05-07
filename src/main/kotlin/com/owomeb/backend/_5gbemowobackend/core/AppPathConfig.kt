@@ -24,10 +24,10 @@ class AppPathsConfig {
     }
 
     fun getDocPath(normName: String): String {
-        return "${getNormDirectory(normName)}/norm"
+        return "${getNormDirectory(normName)}/norm.docx"
     }
     fun getExtractedDocx(normName: String): String {
-        return "${getNormDirectory(normName)}/extractedNorm"
+        return "${getNormDirectory(normName)}/extractedNorm.docx"
     }
 
     fun getEmbeddedJsonPath(normName: String): String {

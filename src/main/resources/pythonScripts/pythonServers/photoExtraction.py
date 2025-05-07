@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify
-from sentence_transformers import SentenceTransformer
 import threading
 import signal
 import sys
@@ -9,22 +8,18 @@ import os
 import shutil
 from lxml import etree as ET
 
-
 sys.stdout.reconfigure(encoding='utf-8')
-
 
 app = Flask(__name__)
 
-server_name = sys.argv[1] if len(sys.argv) > 1 else "serverTemplete "
+server_name = sys.argv[1] if len(sys.argv) > 1 else "serverTemplete"
 port = int(sys.argv[2]) if len(sys.argv) > 2 else 5003
 
 SPRING_BOOT_NOTIFY = f"http://localhost:8080/{server_name}/server-ready"
 
-
-
 @app.route(f"/{server_name}/process", methods=["POST"])
 def process_embedding_request():
-    print(f"process request", flush=True)
+    print("process request", flush=True)
     try:
         data = request.get_json()
         print(f"Received JSON: {data}", flush=True)
@@ -46,16 +41,14 @@ def process_embedding_request():
         print(traceback.format_exc(), flush=True)
         return jsonify({"error": str(e)}), 500
 
-def extract_images_and_replace_drawings(docx_path: str, output_docx_path2:str ,output_dir: str):
+def extract_images_and_replace_drawings(docx_path: str, output_docx_path2: str, output_dir: str):
     temp_dir = "_unpacked_docx"
     photos_dir = os.path.join(output_dir, "photos")
     os.makedirs(photos_dir, exist_ok=True)
 
-    # 1. Rozpakuj plik docx jako zip
     with zipfile.ZipFile(docx_path, 'r') as zip_ref:
         zip_ref.extractall(temp_dir)
 
-    # 2. Przenieś obrazy z word/media do katalogu photos
     media_dir = os.path.join(temp_dir, "word", "media")
     image_mapping = {}
     if os.path.exists(media_dir):
@@ -65,7 +58,6 @@ def extract_images_and_replace_drawings(docx_path: str, output_docx_path2:str ,o
             shutil.copy(os.path.join(media_dir, file), os.path.join(photos_dir, new_name))
             image_mapping[file] = new_name
 
-    # 3. Podmień <w:drawing> i <v:imagedata> na tekstowe reprezentacje
     document_xml_path = os.path.join(temp_dir, "word", "document.xml")
     rels_path = os.path.join(temp_dir, "word", "_rels", "document.xml.rels")
 
@@ -83,7 +75,6 @@ def extract_images_and_replace_drawings(docx_path: str, output_docx_path2:str ,o
 
     drawing_count = 0
 
-    # Pomocnicza funkcja do znajdowania rodzica danego typu
     def find_ancestor(tag_name, elem):
         while elem is not None:
             elem = elem.getparent()
@@ -91,23 +82,45 @@ def extract_images_and_replace_drawings(docx_path: str, output_docx_path2:str ,o
                 return elem
         return None
 
-    # 3a. Obsługa <w:drawing>
+    def extract_and_remove_caption(current_p):
+        parent = current_p.getparent()
+        index = parent.index(current_p)
+        if index + 1 < len(parent):
+            next_p = parent[index + 1]
+            texts = next_p.xpath(".//w:t", namespaces=ns)
+            caption_texts = [t.text.strip() for t in texts if t.text]
+            full_caption = ' '.join(caption_texts)
+            if full_caption.lower().startswith("figure"):
+                parent.remove(next_p)
+                return full_caption
+        return None
+
+    # Obsługa <w:drawing>
     for drawing in root.xpath(".//w:drawing", namespaces=ns):
         run = drawing.getparent()
         if run.tag != f"{{{ns['w']}}}r":
             continue
 
+        paragraph = find_ancestor(f"{{{ns['w']}}}p", run)
+        caption = extract_and_remove_caption(paragraph)
+
         drawing_count += 1
+        ext = ".jpg"
+        filename = f"photo_{drawing_count}{ext}"
+
         new_run = ET.Element(f"{{{ns['w']}}}r")
         new_text = ET.SubElement(new_run, f"{{{ns['w']}}}t")
-        new_text.text = f"{{zdjęcie zapisane jako: photo_{drawing_count}.<format>}}"
+        if caption:
+            new_text.text = f"'{filename} : {caption}'"
+        else:
+            new_text.text = f"'{filename}'"
 
         run_parent = run.getparent()
         run_index = run_parent.index(run)
         run_parent.remove(run)
         run_parent.insert(run_index, new_run)
 
-    # 3b. Obsługa <v:imagedata>
+    # Obsługa <v:imagedata>
     if os.path.exists(rels_path):
         rels_tree = ET.parse(rels_path)
         rels_root = rels_tree.getroot()
@@ -124,24 +137,27 @@ def extract_images_and_replace_drawings(docx_path: str, output_docx_path2:str ,o
                     target = os.path.basename(rel.get("Target"))
                     break
 
+            paragraph = find_ancestor(f"{{{ns['w']}}}p", parent_r)
+            caption = extract_and_remove_caption(paragraph)
+
             drawing_count += 1
-            new_filename = image_mapping.get(target, f"photo_{drawing_count}.<format>")
+            new_filename = image_mapping.get(target, f"photo_{drawing_count}.jpg")
 
             new_run = ET.Element(f"{{{ns['w']}}}r")
             new_text = ET.SubElement(new_run, f"{{{ns['w']}}}t")
-            new_text.text = f"{{zdjęcie zapisane jako: {new_filename}}}"
+            if caption:
+                new_text.text = f"'{new_filename} : {caption}'"
+            else:
+                new_text.text = f"'{new_filename}'"
 
             run_parent = parent_r.getparent()
             run_index = run_parent.index(parent_r)
             run_parent.remove(parent_r)
             run_parent.insert(run_index, new_run)
 
-    # 4. Zapisz zmodyfikowany dokument.xml
     tree.write(document_xml_path, encoding="utf-8", xml_declaration=True, pretty_print=True)
 
-    # 5. Spakuj ponownie do nowego .docx
-    output_docx_path = os.path.join(output_docx_path2)
-    output_docx_path += ".docx"
+    output_docx_path = output_docx_path2
     with zipfile.ZipFile(output_docx_path, 'w', zipfile.ZIP_DEFLATED) as docx:
         for foldername, subfolders, filenames in os.walk(temp_dir):
             for filename in filenames:
@@ -149,14 +165,10 @@ def extract_images_and_replace_drawings(docx_path: str, output_docx_path2:str ,o
                 arcname = os.path.relpath(file_path, temp_dir)
                 docx.write(file_path, arcname)
 
-    # 6. Posprzątaj tymczasowe pliki
     shutil.rmtree(temp_dir)
 
     print(f"Wszystkie zdjęcia zapisane w: {photos_dir}")
     print(f"Zmodyfikowany dokument zapisany jako: {output_docx_path}")
-
-
-
 
 @app.route(f"/{server_name}/shutdown", methods=["POST"])
 def shutdown():

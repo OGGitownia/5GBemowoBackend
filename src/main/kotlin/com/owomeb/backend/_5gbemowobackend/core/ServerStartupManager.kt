@@ -1,8 +1,7 @@
 package com.owomeb.backend._5gbemowobackend.core
 
 import com.owomeb.backend._5gbemowobackend.api.BaseController
-import com.owomeb.backend._5gbemowobackend.helpers.NewMarkDowns
-import com.owomeb.backend._5gbemowobackend.hybridbase.builder.DocxPhotoExtractor
+import com.owomeb.backend._5gbemowobackend.hybridbase.builder.NewMarkDowns
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
@@ -35,7 +34,7 @@ println("Hello World!")
 
 
         //commissionService.startCommission(26, "request.sourceUrl")
-        //baseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-g30.zip")
+        baseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-i50.zip")
         //baseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-e60.zip")
         /*
             val extractor = DocxPhotoExtractor(

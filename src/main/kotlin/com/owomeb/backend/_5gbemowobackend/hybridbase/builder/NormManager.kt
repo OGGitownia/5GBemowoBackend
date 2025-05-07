@@ -60,8 +60,8 @@ class NormManager {
 
                 while (zipEntry != null) {
                     if (zipEntry.name.endsWith(".doc", ignoreCase = true) || zipEntry.name.endsWith(".docx", ignoreCase = true)) {
-                        val extension = if (zipEntry.name.endsWith(".docx", ignoreCase = true)) ".docx" else ".doc"
-                        docFile = File(docPath + extension)
+                        //val extension = if (zipEntry.name.endsWith(".docx", ignoreCase = true)) ".docx" else ".doc"
+                        docFile = File(docPath)
                         println("ZIP jest rozpakowywany jako jako: ${docFile.name}")
                         FileOutputStream(docFile).use { outputStream ->
                             zipInputStream.copyTo(outputStream)

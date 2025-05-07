@@ -1,7 +1,6 @@
 package com.owomeb.backend._5gbemowobackend.hybridbase.builder
 
 import com.owomeb.backend._5gbemowobackend.core.AppPathsConfig
-import com.owomeb.backend._5gbemowobackend.helpers.NewMarkDowns
 import com.owomeb.backend._5gbemowobackend.hybridbase.registry.BaseService
 import com.owomeb.backend._5gbemowobackend.hybridbase.registry.BaseStatus
 import java.util.concurrent.TimeUnit
@@ -11,7 +10,7 @@ class CommissionForCreatingDB(private val baseService: BaseService,
                               private val appPathsConfig: AppPathsConfig,
                               private val normaManager: NormManager,
                               private val photoExtraction: PhotoExtraction,
-                              private val markDownManager: NewMarkDowns,
+                              private val markDownManager: FinalMarkdown,
                               private val embeddingManager: NewEmbeddingManager,
                               private val hybridDbCreator: HybridDbCreator,
                               val baseID: Long,
@@ -72,9 +71,9 @@ class CommissionForCreatingDB(private val baseService: BaseService,
     private fun markdown() {
         println("Markdowning for $baseID...")
         baseService.updateStatus(baseID, BaseStatus.PROCESSING, "robienie markdown")
-        markDownManager.convertDocumentToMarkdown(
-            normPath = appPathsConfig.getExtractedDocx(baseID.toString()),
-            markdownPath = appPathsConfig.getMarkdownPath(baseID.toString())
+        markDownManager.doMarkdowning(
+            inputPath = appPathsConfig.getExtractedDocx(baseID.toString()),
+            outputPath = appPathsConfig.getMarkdownPath(baseID.toString())
         )
         TimeUnit.SECONDS.sleep(5)
         commissionStatus = CommissionStatus.MARKDOWNED
