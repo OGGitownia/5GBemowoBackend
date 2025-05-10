@@ -82,7 +82,7 @@ class CommissionForCreatingDB(private val baseService: BaseService,
     private fun chunk() {
         println("Chunking for $baseID...")
         baseService.updateStatus(baseID, BaseStatus.PROCESSING, "robienie chuk chunk")
-        val chunker = UltraChunkyChunker(
+        val chunker = FinalChunker(
             pureMarkdownPath = appPathsConfig.getMarkdownPath(baseID.toString()),
             outputPath = appPathsConfig.getChunkedJsonPath(baseID.toString())
         )

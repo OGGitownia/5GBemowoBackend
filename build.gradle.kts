@@ -24,6 +24,9 @@ repositories {
 
 dependencies {
 
+    implementation("org.springframework.boot:spring-boot-starter-mail")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.seleniumhq.selenium:selenium-java:4.20.0")
     implementation("io.github.bonigarcia:webdrivermanager:5.8.0")
     implementation("org.jsoup:jsoup:1.17.2")

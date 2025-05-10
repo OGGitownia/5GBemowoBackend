@@ -25,26 +25,50 @@ def process_embedding_request():
     print(f"process_embedding_request", flush=True)
     try:
         data = request.get_json()
-        input_file = data.get("inputFile")
-        output_file = data.get("outputFile")
-        print(f"Input file: {input_file}", flush=True)
+        input_file = os.path.abspath(data.get("inputFile"))
+        output_file = os.path.abspath(data.get("outputFile"))
+        print(f"Input file (absolute path): {input_file}", flush=True)
+        print(f"Output file (absolute path): {output_file}", flush=True)
 
-        if not input_file or not output_file:
-            return jsonify({"error": "Missing 'inputFile' or 'outputFile'"}), 400
+        max_wait_time = 10  # maksymalny czas oczekiwania (sekundy)
+        wait_interval = 1   # co ile sekund sprawdzamy
+        file_has_been_found = False
 
-        if not os.path.isfile(input_file):
-            return jsonify({"error": f"Input file does not exist: {input_file}"}), 400
+        # 🔄 **Czekamy 10 sekund, czy plik się pojawi**
+        for attempt in range(max_wait_time):
+            if os.path.isfile(input_file):
+                print(f"✅ Found the file: {input_file}", flush=True)
+                file_has_been_found = True
+                break
+            else:
+                print(f"⏳ Waiting for the file to appear... ({attempt + 1}/{max_wait_time})", flush=True)
+                time.sleep(wait_interval)
 
+        if not file_has_been_found:
+            print(f"❌ File not found after {max_wait_time} seconds: {input_file}", flush=True)
+            return jsonify({"error": f"Input file does not exist after waiting: {input_file}"}), 400
 
-        # Wczytaj plik JSON z chunkami
+        # ✅ **Wczytaj plik JSON z chunkami**
         with open(input_file, "r", encoding="utf-8") as f:
             json_data = json.load(f)
 
         lines = json_data.get("chunks", [])
-        if not isinstance(lines, list) or not all(isinstance(line, str) for line in lines):
-            return jsonify({"error": "'chunks' must be a list of strings in input JSON"}), 400
 
+        # ✅ **Obsługa różnych struktur**
+        if isinstance(lines, list):
+            if all(isinstance(line, str) for line in lines):
+                print("✅ Detected list of strings", flush=True)
+            elif all(isinstance(line, dict) and "content" in line for line in lines):
+                print("✅ Detected list of objects with 'content'", flush=True)
+                lines = [line["content"] for line in lines]
+            else:
+                print("❌ Invalid JSON structure: Expected list of strings or list of objects with 'content'", flush=True)
+                return jsonify({"error": "'chunks' must be a list of strings or list of objects with 'content'"}), 400
+        else:
+            print("❌ Invalid JSON structure: 'chunks' is not a list", flush=True)
+            return jsonify({"error": "'chunks' must be a list"}), 400
 
+        # ✅ **Sprawdzamy czy lista jest pusta**
         total = len(lines)
         if total == 0:
             return jsonify({"error": "Input file is empty"}), 400
@@ -77,7 +101,6 @@ def process_embedding_request():
         import traceback
         print(traceback.format_exc(), flush=True)
         return jsonify({"error": str(e)}), 500
-
 
 @app.route(f"/{server_name}/shutdown", methods=["POST"])
 def shutdown():
