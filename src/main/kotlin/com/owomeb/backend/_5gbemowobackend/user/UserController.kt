@@ -3,14 +3,18 @@ package com.owomeb.backend._5gbemowobackend.user
 import com.owomeb.backend._5gbemowobackend.token.VerificationService
 import com.owomeb.backend._5gbemowobackend.user.dto.RegisterByEmailRequest
 import com.owomeb.backend._5gbemowobackend.user.dto.RegisterByPhoneRequest
+import com.owomeb.backend._5gbemowobackend.user.service.EmailService
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/users")
-class UserController(private val userService: UserService,
-    private val verificationService: VerificationService) {
+class UserController(
+    private val userService: UserService,
+    private val verificationService: VerificationService,
+    private val emailService: EmailService
+) {
 
     @GetMapping("/verify/email")
     fun verifyEmailToken(@RequestParam token: String): ResponseEntity<Any> {
@@ -32,26 +36,6 @@ class UserController(private val userService: UserService,
         }
     }
 
-    @PostMapping("/register/email")
-    fun initiateEmailRegistration(@Valid @RequestBody request: RegisterByEmailRequest): ResponseEntity<Any> {
-        return try {
-            verificationService.initiateEmailVerification(request)
-            ResponseEntity.ok("Verification email sent to ${request.email}")
-        } catch (e: IllegalArgumentException) {
-            ResponseEntity.badRequest().body(e.message)
-        }
-    }
-
-    @PostMapping("/register/phone")
-    fun initiatePhoneRegistration(@Valid @RequestBody request: RegisterByPhoneRequest): ResponseEntity<Any> {
-        return try {
-            verificationService.initiatePhoneVerification(request)
-            ResponseEntity.ok("Verification SMS sent to ${request.phoneNumber}")
-        } catch (e: IllegalArgumentException) {
-            ResponseEntity.badRequest().body(e.message)
-        }
-    }
-
 
     @PostMapping("/register/email")
     fun registerUserByEmail(@Valid @RequestBody request: RegisterByEmailRequest): ResponseEntity<Any> {
@@ -62,6 +46,8 @@ class UserController(private val userService: UserService,
                 email = request.email,
                 phoneNumber = null
             )
+            println("Rejestracja kogoś ")
+            verificationService.initiateEmailVerification(request)
             ResponseEntity.ok("User ${newUser.username} has been successfully registered with email.")
         } catch (e: IllegalArgumentException) {
             ResponseEntity.badRequest().body(e.message)

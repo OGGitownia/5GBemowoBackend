@@ -3,5 +3,5 @@ POST http://localhost:8080/api/bases
 Content-Type: application/json
 
 {
-  "sourceUrl": "https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-i50.zip"
+  "sourceUrl": "https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/363g31-i50.zip"
 }

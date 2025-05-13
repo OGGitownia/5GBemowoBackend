@@ -23,8 +23,10 @@ data class VerificationToken(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    val user: UserEntity
-)
+    val user: UserEntity?
+){
+    constructor() : this(0, "", LocalDateTime.now().plusMinutes(15), VerificationType.EMAIL, null)
+}
 
 enum class VerificationType {
     EMAIL, PHONE

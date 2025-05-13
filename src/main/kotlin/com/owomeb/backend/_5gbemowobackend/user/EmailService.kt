@@ -27,7 +27,9 @@ class EmailService(private val mailSender: JavaMailSender) {
             <body>
                 <h2>Welcome to Chat 3GPP</h2>
                 <p>To verify your email address, please click the link below:</p>
-                <a href="$verificationLink">Verify Email</a>
+                <a href="$verificationLink">Verify Email</a> 
+                <p> or enter following code in the proper space in our APP: </p>
+                <p> $token</p>
                 <p>This link is valid for 15 minutes.</p>
                 <p>If you did not create an account, you can ignore this message</p>
             </body>

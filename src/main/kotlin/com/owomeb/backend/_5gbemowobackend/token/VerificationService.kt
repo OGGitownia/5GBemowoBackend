@@ -30,7 +30,7 @@ class VerificationService(
         verificationTokenRepository.save(verificationToken)
 
         emailService.sendVerificationEmail(request.email, token)
-        //println("Wysłano mail weryfikacyjny do ${request.email} z tokenem: $token")
+        println("Wysłano mail weryfikacyjny do ${request.email} z tokenem: $token")
     }
 
     @Transactional
@@ -61,7 +61,7 @@ class VerificationService(
         }
 
         val user = verificationToken.user
-        user.emailVerified = true
+        user!!.emailVerified = true
         userRepository.save(user)
 
         verificationTokenRepository.delete(verificationToken)
@@ -80,7 +80,7 @@ class VerificationService(
         }
 
         val user = verificationToken.user
-        user.phoneNumberVerified = true
+        user!!.phoneNumberVerified = true
         userRepository.save(user)
 
         verificationTokenRepository.delete(verificationToken)
