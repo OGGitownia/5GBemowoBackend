@@ -1,13 +1,12 @@
 package com.owomeb.backend._5gbemowobackend.user
 
+import com.owomeb.backend._5gbemowobackend.session.SessionService
 import com.owomeb.backend._5gbemowobackend.token.VerificationService
 import com.owomeb.backend._5gbemowobackend.user.dto.RegisterByEmailRequest
 import com.owomeb.backend._5gbemowobackend.user.dto.RegisterByPhoneRequest
-import com.owomeb.backend._5gbemowobackend.user.service.EmailService
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import com.owomeb.backend._5gbemowobackend.session.SessionService
 
 
 @RestController
@@ -17,7 +16,6 @@ class UserController(
     private val verificationService: VerificationService,
     private val sessionService: SessionService
 ) {
-
     @GetMapping("/session/{token}")
     fun getUserSession(@PathVariable token: String): ResponseEntity<UserEntity> {
         val session = sessionService.validateSession(token)
@@ -35,6 +33,18 @@ class UserController(
             ResponseEntity.status(404).build()
         }
     }
+
+    @DeleteMapping("/session/{token}")
+    fun endSession(@PathVariable token: String): ResponseEntity<Map<String, String>> {
+        val session = sessionService.validateSession(token)
+
+        if (session != null) {
+            sessionService.removeSession(token)
+            return ResponseEntity.ok(mapOf("message" to "Session has been ended"))
+        }
+        return ResponseEntity.ok(mapOf("message" to "Session didn't exist and it does not exist"))
+    }
+
 
     @PostMapping("/session/new/{userId}")
     fun createNewSession(@PathVariable userId: Long): ResponseEntity<Map<String, String>> {
@@ -67,8 +77,6 @@ class UserController(
         }
     }
 
-
-
     @GetMapping("/verify/phone")
     fun verifyPhoneToken(@RequestParam token: String): ResponseEntity<Map<String, String>> {
         return try {
@@ -78,8 +86,6 @@ class UserController(
             ResponseEntity.badRequest().body(mapOf("error" to (e.message ?: "Verification failed")))
         }
     }
-
-
 
     @PostMapping("/register/email")
     fun registerUserByEmail(@Valid @RequestBody request: RegisterByEmailRequest): ResponseEntity<Map<String, String>> {
@@ -106,7 +112,6 @@ class UserController(
         }
     }
 
-
     @PostMapping("/register/phone")
     fun registerUserByPhone(@Valid @RequestBody request: RegisterByPhoneRequest): ResponseEntity<Map<String, String>> {
         return try {
@@ -128,7 +133,6 @@ class UserController(
             ))
         }
     }
-
 
     @PostMapping("/login/email")
     fun loginByEmail(
@@ -167,7 +171,6 @@ class UserController(
         }
     }
 
-
     @PostMapping("/login/phone")
     fun loginByPhone(
         @RequestParam phoneNumber: String,
@@ -205,7 +208,6 @@ class UserController(
         }
     }
 
-
     @DeleteMapping("delete/{id}")
     fun deleteUser(@PathVariable id: Long): ResponseEntity<Map<String, String>> {
         return try {
@@ -219,5 +221,4 @@ class UserController(
             ))
         }
     }
-
 }
