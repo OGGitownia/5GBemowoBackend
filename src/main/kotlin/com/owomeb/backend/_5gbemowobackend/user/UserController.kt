@@ -15,7 +15,6 @@ import com.owomeb.backend._5gbemowobackend.session.SessionService
 class UserController(
     private val userService: UserService,
     private val verificationService: VerificationService,
-    private val emailService: EmailService,
     private val sessionService: SessionService
 ) {
 
@@ -57,24 +56,29 @@ class UserController(
     }
 
     @GetMapping("/verify/email")
-    fun verifyEmailToken(@RequestParam token: String): ResponseEntity<Any> {
+    fun verifyEmailToken(@RequestParam token: String): ResponseEntity<Map<String, String>> {
         return try {
+            println("token: $token")
             verificationService.verifyEmailToken(token)
-            ResponseEntity.ok("Email successfully verified")
+            ResponseEntity.ok(mapOf("message" to "Email successfully verified"))
         } catch (e: IllegalArgumentException) {
-            ResponseEntity.badRequest().body(e.message)
+            println("Bad request")
+            ResponseEntity.badRequest().body(mapOf("error" to (e.message ?: "Verification failed")))
         }
     }
 
+
+
     @GetMapping("/verify/phone")
-    fun verifyPhoneToken(@RequestParam token: String): ResponseEntity<Any> {
+    fun verifyPhoneToken(@RequestParam token: String): ResponseEntity<Map<String, String>> {
         return try {
             verificationService.verifyPhoneToken(token)
-            ResponseEntity.ok("Phone number successfully verified")
+            ResponseEntity.ok(mapOf("message" to "Phone number successfully verified"))
         } catch (e: IllegalArgumentException) {
-            ResponseEntity.badRequest().body(e.message)
+            ResponseEntity.badRequest().body(mapOf("error" to (e.message ?: "Verification failed")))
         }
     }
+
 
 
     @PostMapping("/register/email")
@@ -104,7 +108,7 @@ class UserController(
 
 
     @PostMapping("/register/phone")
-    fun registerUserByPhone(@Valid @RequestBody request: RegisterByPhoneRequest): ResponseEntity<Any> {
+    fun registerUserByPhone(@Valid @RequestBody request: RegisterByPhoneRequest): ResponseEntity<Map<String, String>> {
         return try {
             val newUser = userService.registerUser(
                 username = request.username,
@@ -112,45 +116,75 @@ class UserController(
                 email = null,
                 phoneNumber = request.phoneNumber
             )
-            ResponseEntity.ok("User ${newUser.username} has been successfully registered with phone number.")
+            ResponseEntity.ok(mapOf(
+                "message" to "User ${newUser.username} has been successfully registered with phone number.",
+                "id" to newUser.id.toString(),
+                "phoneNumber" to (newUser.phoneNumber ?: ""),
+                "username" to newUser.username
+            ))
         } catch (e: IllegalArgumentException) {
-            ResponseEntity.badRequest().body(e.message)
+            ResponseEntity.badRequest().body(mapOf(
+                "error" to (e.message ?: "Unknown error during registration")
+            ))
         }
     }
+
 
     @PostMapping("/login/email")
     fun loginByEmail(
         @RequestParam email: String,
         @RequestParam password: String
-    ): ResponseEntity<Any> {
+    ): ResponseEntity<Map<String, String>> {
         val user = userService.authenticateByEmail(email, password)
+
         return if (user.isPresent) {
-            ResponseEntity.ok("Zalogowano poprawnie użytkownika: ${user.get().username}")
+            ResponseEntity.ok(
+                mapOf(
+                    "message" to "Zalogowano poprawnie użytkownika",
+                    "username" to user.get().username
+                )
+            )
         } else {
-            ResponseEntity.status(401).body("Niepoprawny email lub hasło")
+            ResponseEntity.status(401).body(
+                mapOf(
+                    "error" to "Niepoprawny email lub hasło"
+                )
+            )
         }
     }
+
 
     @PostMapping("/login/phone")
     fun loginByPhone(
         @RequestParam phoneNumber: String,
         @RequestParam password: String
-    ): ResponseEntity<Any> {
+    ): ResponseEntity<Map<String, String>> {
         val user = userService.authenticateByPhoneNumber(phoneNumber, password)
+
         return if (user.isPresent) {
-            ResponseEntity.ok("Zalogowano poprawnie użytkownika: ${user.get().username}")
+            ResponseEntity.ok(mapOf(
+                "message" to "Zalogowano poprawnie użytkownika",
+                "username" to user.get().username
+            ))
         } else {
-            ResponseEntity.status(401).body("Niepoprawny numer telefonu lub hasło")
+            ResponseEntity.status(401).body(mapOf(
+                "error" to "Niepoprawny numer telefonu lub hasło"
+            ))
         }
     }
 
-    @DeleteMapping("/{id}")
-    fun deleteUser(@PathVariable id: Long): ResponseEntity<Any> {
+    @DeleteMapping("delete/{id}")
+    fun deleteUser(@PathVariable id: Long): ResponseEntity<Map<String, String>> {
         return try {
             userService.deleteUser(id)
-            ResponseEntity.ok("Użytkownik o ID $id został usunięty.")
+            ResponseEntity.ok(mapOf(
+                "message" to "Użytkownik o ID $id został usunięty."
+            ))
         } catch (e: IllegalArgumentException) {
-            ResponseEntity.badRequest().body(e.message)
+            ResponseEntity.badRequest().body(mapOf(
+                "error" to (e.message ?: "Nieznany błąd podczas usuwania użytkownika.")
+            ))
         }
     }
+
 }
