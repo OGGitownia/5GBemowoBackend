@@ -43,6 +43,9 @@ class UserService(
     fun findByEmail(email: String): Optional<UserEntity> {
         return userRepository.findByEmail(email)
     }
+    fun findById(id: Long): Optional<UserEntity> {
+        return userRepository.findById(id)
+    }
 
     fun findByPhoneNumber(phoneNumber: String): Optional<UserEntity> {
         return userRepository.findByPhoneNumber(phoneNumber)

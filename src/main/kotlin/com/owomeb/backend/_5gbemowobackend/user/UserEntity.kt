@@ -21,7 +21,7 @@ data class UserEntity(
     val username: String = "",
 
     @Column(nullable = false)
-    val password: String = "",
+    var password: String = "",
 
     @Column
     val avatarPath: String? = null,
