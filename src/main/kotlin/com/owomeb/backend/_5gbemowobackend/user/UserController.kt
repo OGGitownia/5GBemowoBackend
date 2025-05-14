@@ -134,16 +134,30 @@ class UserController(
     fun loginByEmail(
         @RequestParam email: String,
         @RequestParam password: String
-    ): ResponseEntity<Map<String, String>> {
+    ): ResponseEntity<Map<String, Any>> {
         val user = userService.authenticateByEmail(email, password)
 
         return if (user.isPresent) {
-            ResponseEntity.ok(
-                mapOf(
-                    "message" to "Zalogowano poprawnie użytkownika",
-                    "username" to user.get().username
-                )
+            val foundUser = user.get()
+
+            val token = sessionService.addSession(foundUser.id)
+
+            val userData: Map<String, Any> = mapOf(
+                "id" to foundUser.id,
+                "email" to (foundUser.email ?: ""),
+                "phoneNumber" to (foundUser.phoneNumber ?: ""),
+                "username" to foundUser.username,
+                "avatarPath" to (foundUser.avatarPath ?: ""),
+                "createdAt" to foundUser.createdAt.toString(),
+                "lastActiveAt" to foundUser.lastActiveAt.toString(),
+                "roles" to foundUser.roles.map { it.name },
+                "isActive" to foundUser.isActive,
+                "emailVerified" to foundUser.emailVerified,
+                "phoneNumberVerified" to foundUser.phoneNumberVerified,
+                "sessionToken" to token
             )
+
+            ResponseEntity.ok(userData)
         } else {
             ResponseEntity.status(401).body(
                 mapOf(
@@ -158,20 +172,39 @@ class UserController(
     fun loginByPhone(
         @RequestParam phoneNumber: String,
         @RequestParam password: String
-    ): ResponseEntity<Map<String, String>> {
+    ): ResponseEntity<Map<String, Any>> {
         val user = userService.authenticateByPhoneNumber(phoneNumber, password)
 
         return if (user.isPresent) {
-            ResponseEntity.ok(mapOf(
-                "message" to "Zalogowano poprawnie użytkownika",
-                "username" to user.get().username
-            ))
+            val foundUser = user.get()
+
+            val token = sessionService.addSession(foundUser.id)
+
+            val userData: Map<String, Any> = mapOf(
+                "id" to foundUser.id,
+                "email" to (foundUser.email ?: ""),
+                "phoneNumber" to (foundUser.phoneNumber ?: ""),
+                "username" to foundUser.username,
+                "avatarPath" to (foundUser.avatarPath ?: ""),
+                "createdAt" to foundUser.createdAt.toString(),
+                "lastActiveAt" to foundUser.lastActiveAt.toString(),
+                "roles" to foundUser.roles.map { it.name },
+                "isActive" to foundUser.isActive,
+                "emailVerified" to foundUser.emailVerified,
+                "phoneNumberVerified" to foundUser.phoneNumberVerified,
+                "sessionToken" to token
+            )
+
+            ResponseEntity.ok(userData)
         } else {
-            ResponseEntity.status(401).body(mapOf(
-                "error" to "Niepoprawny numer telefonu lub hasło"
-            ))
+            ResponseEntity.status(401).body(
+                mapOf(
+                    "error" to "Niepoprawny numer telefonu lub hasło"
+                )
+            )
         }
     }
+
 
     @DeleteMapping("delete/{id}")
     fun deleteUser(@PathVariable id: Long): ResponseEntity<Map<String, String>> {

@@ -10,6 +10,7 @@ class SessionService(
     fun addSession(userId: Long, isVerified: Boolean = false): String {
         val token = UUID.randomUUID().toString()
 
+
         val session = SessionEntity(token = token, userId = userId)
 
         sessionRepository.save(session)
