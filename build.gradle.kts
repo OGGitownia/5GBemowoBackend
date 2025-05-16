@@ -26,12 +26,12 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-mail")
     implementation("org.springframework.boot:spring-boot-starter-validation")
-    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.security:spring-security-config:6.1.2")
+    implementation("org.springframework.security:spring-security-web:6.1.2")
+    implementation("org.springframework.security:spring-security-core:6.1.2")
     implementation("org.seleniumhq.selenium:selenium-java:4.20.0")
     implementation("io.github.bonigarcia:webdrivermanager:5.8.0")
     implementation("org.jsoup:jsoup:1.17.2")
-    implementation("org.apache.poi:poi-scratchpad:5.2.5")
-    implementation("commons-io:commons-io:2.15.1")
     implementation("org.freehep:freehep-graphicsio-emf:2.4")
     implementation("com.google.guava:guava:32.1.2-jre")
 
@@ -39,12 +39,12 @@ dependencies {
     implementation("org.apache.poi:poi-scratchpad:5.2.5")
     implementation("commons-io:commons-io:2.15.1")
     implementation("org.springframework.boot:spring-boot-starter-websocket")
-    implementation("org.postgresql:postgresql:42.7.5")
+    runtimeOnly("org.postgresql:postgresql:42.7.5")
+
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    runtimeOnly("org.postgresql:postgresql")
 
 
     implementation("com.google.code.gson:gson:2.10.1")
@@ -52,7 +52,6 @@ dependencies {
 
     // Spring Boot
     implementation("org.springframework.boot:spring-boot-starter-data-elasticsearch")
-    implementation("org.springframework.boot:spring-boot-starter-web")
 
     // JSON i serializacja
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -61,7 +60,6 @@ dependencies {
     // Apache POI (obsługa .doc i .docx)
     implementation("org.apache.poi:poi:5.2.3")
     implementation("org.apache.poi:poi-ooxml:5.2.3")
-    implementation("org.apache.poi:poi-scratchpad:5.2.3")
 
     // Kompresja ZIP
     implementation("org.apache.commons:commons-compress:1.21")

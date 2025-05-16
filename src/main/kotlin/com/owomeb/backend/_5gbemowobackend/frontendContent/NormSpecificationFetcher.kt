@@ -153,7 +153,8 @@ object NormSpecificationFetcher {
                         latestVersion = specNumber,
                         zipUrl = zipUrl,
                         date = date,
-                        size = size
+                        size = size,
+                        numberOfBases = 0
                     )
                 } catch (e: Exception) {
                     null
@@ -185,5 +186,6 @@ data class Norm(
     val latestVersion: String,
     val zipUrl: String,
     val date: String,
-    val size: String
+    val size: String,
+    val numberOfBases: Int
 )

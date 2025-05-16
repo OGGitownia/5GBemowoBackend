@@ -1,9 +1,6 @@
-package com.owomeb.backend._5gbemowobackend.api
+package com.owomeb.backend._5gbemowobackend.hybridbase.registry
 
 import com.owomeb.backend._5gbemowobackend.hybridbase.builder.CommissionService
-import com.owomeb.backend._5gbemowobackend.hybridbase.registry.BaseEntity
-import com.owomeb.backend._5gbemowobackend.hybridbase.registry.BaseService
-import com.owomeb.backend._5gbemowobackend.hybridbase.registry.BaseStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -13,6 +10,11 @@ class BaseController(
     private val baseService: BaseService,
     private val commissionService: CommissionService
 ) {
+
+    @GetMapping("/methods", produces = ["application/json"])
+    fun getBaseCreatingMethods(): List<String> {
+        return BaseCreatingMethods.entries.map { it.name }
+    }
 
     @GetMapping
     fun getAllBases(): List<BaseEntity> {

@@ -35,6 +35,12 @@ class BaseService(
     }
 
     @Transactional
+    fun createBase(url: String): BaseEntity {
+        val newBase = BaseEntity(sourceUrl = url)
+        return baseRepository.save(newBase)
+    }
+
+    @Transactional
     fun updateStatus(baseId: Long, status: BaseStatus, message: String? = null) {
         val base = baseRepository.findById(baseId).orElseThrow()
         base.status = status
@@ -52,9 +58,10 @@ class BaseService(
     fun unregisterStatusObserver(baseId: Long) {
         statusObservers.remove(baseId)
     }
+
     @Transactional
     fun delete(base: BaseEntity) {
-        println("Próba usuwaniaDELETE")
+        println("Próba usuwania bazy ${base.sourceUrl}")
         baseRepository.delete(base)
     }
 

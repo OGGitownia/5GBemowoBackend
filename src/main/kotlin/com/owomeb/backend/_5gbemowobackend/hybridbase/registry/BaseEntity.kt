@@ -6,11 +6,12 @@ import java.time.LocalDateTime
 @Entity
 @Table(name = "bases")
 data class BaseEntity(
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     val sourceUrl: String = "",
 
     @Column(nullable = false)
@@ -21,14 +22,38 @@ data class BaseEntity(
     var statusMessage: String? = null,
 
     @Column(nullable = false)
-    val createdAt: LocalDateTime = LocalDateTime.now()
+    val createdAt: LocalDateTime = LocalDateTime.now(),
+
+    @Column(nullable = false)
+    val maxContextWindow: Int = 0,
+
+    @Column(nullable = false)
+    val multiSearchAllowed: Boolean = false,
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    val createdWthMethod: BaseCreatingMethods = BaseCreatingMethods.FITTED_OVERLAP
 ) {
-    constructor() : this(0, "", BaseStatus.PENDING, null, LocalDateTime.now())
+    constructor() : this(
+        id = 0,
+        sourceUrl = "",
+        status = BaseStatus.PENDING,
+        statusMessage = null,
+        createdAt = LocalDateTime.now(),
+        maxContextWindow = 0,
+        multiSearchAllowed = false,
+        createdWthMethod = BaseCreatingMethods.FITTED_OVERLAP
+)
 }
+
 
 enum class BaseStatus {
     PENDING,
     PROCESSING,
     READY,
     FAILED
+}
+enum class BaseCreatingMethods{
+    FITTED_OVERLAP,
+    UNCOMPROMISINGNESS
 }
