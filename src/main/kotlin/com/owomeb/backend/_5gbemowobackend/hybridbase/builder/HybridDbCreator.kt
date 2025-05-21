@@ -5,35 +5,34 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-
+import java.util.concurrent.ConcurrentHashMap
 
 @RestController
 @RequestMapping("/hybridDbCreator")
-class HybridDbCreator: PythonServerModel<HybridDbCreator.QueueItem>(
-    serverName =  "hybridDbCreator",
+class HybridDbCreator : PythonServerModel<HybridDbCreator.QueueItem>(
+    serverName = "hybridDbCreator",
     scriptPath = "src/main/resources/pythonScripts/pythonServers/dbCreator.py",
-    autoClose =  true
-){
+    autoClose = true
+) {
+
+    private val callbacks = ConcurrentHashMap<QueueItem, () -> Unit>()
 
     @PostMapping("/server-ready")
     override fun markServerAsReady(@RequestBody body: Map<String, Any>): Map<String, String> {
         return super.markServerAsReady(body)
     }
 
-    fun createDb(inputFilePath: String, outputFilePath: String, commission: CommissionForCreatingDB) {
-        val queueItem = QueueItem(
-            inputPath = inputFilePath,
-            outputPath = outputFilePath,
-            commission = commission
-        )
+    fun createDb(inputFilePath: String, outputFilePath: String, onFinish: () -> Unit) {
+        val queueItem = QueueItem(inputPath = inputFilePath, outputPath = outputFilePath)
+        callbacks[queueItem] = onFinish
         this.addToQueue(queueItem)
     }
 
     override fun publishResult(result: String, item: QueueItem) {
-        item.commission.commissionStatus = CommissionStatus.HYBRID_BASED
-        println("Item was: $item")
-        println("Server result $serverName: $result")
+        println("Zakończono tworzenie bazy dla: ${item.inputPath}")
+        callbacks.remove(item)?.invoke()
+        println("Wynik przetwarzania z serwera $serverName: $result")
     }
 
-    data class QueueItem(val inputPath: String, val outputPath: String, val commission: CommissionForCreatingDB)
+    data class QueueItem(val inputPath: String, val outputPath: String)
 }

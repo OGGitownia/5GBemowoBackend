@@ -1,44 +1,34 @@
 package com.owomeb.backend._5gbemowobackend.hybridbase.registry
 
+import com.owomeb.backend._5gbemowobackend.hybridbase.newbuilder.CommissionManager
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.concurrent.ConcurrentHashMap
 
 @Service
 class BaseService(
-    private val baseRepository: BaseRepository
+    private val baseRepository: BaseRepository,
 ) {
-    // WebSocket tututututututu
     val statusObservers = ConcurrentHashMap<Long, (BaseEntity) -> Unit>()
 
-    fun listAllBases(): List<BaseEntity> {
-        val result = baseRepository.findAll()
-        println(result)
-        return result
-    }
+    fun listAllBases(): List<BaseEntity> = baseRepository.findAll()
 
-    fun getBaseById(id: Long): BaseEntity? {
-        return baseRepository.findById(id).orElse(null)
-    }
+    fun getBaseById(id: Long): BaseEntity? = baseRepository.findById(id).orElse(null)
 
-    fun findBySourceUrl(url: String): BaseEntity? {
-        return baseRepository.findBySourceUrl(url)
-    }
+    fun findBySourceUrl(url: String): BaseEntity? = baseRepository.findBySourceUrl(url)
 
     @Transactional
-    fun createBaseIfNotExists(url: String): BaseEntity {
-        val existing = baseRepository.findBySourceUrl(url)
-        if (existing != null) return existing
-
-        val newBase = BaseEntity(sourceUrl = url)
-        return baseRepository.save(newBase)
+    fun createBase(sourceUrl: String, method: String, userId: Long): Long {
+        val base = BaseEntity(
+            sourceUrl = sourceUrl,
+            status = BaseStatus.PENDING,
+            createdWthMethod = BaseCreatingMethods.valueOf(method),
+            multiSearchAllowed = false,
+            maxContextWindow = 4096
+        )
+        return baseRepository.save(base).id
     }
 
-    @Transactional
-    fun createBase(url: String): BaseEntity {
-        val newBase = BaseEntity(sourceUrl = url)
-        return baseRepository.save(newBase)
-    }
 
     @Transactional
     fun updateStatus(baseId: Long, status: BaseStatus, message: String? = null) {
@@ -47,7 +37,6 @@ class BaseService(
         base.statusMessage = message
         baseRepository.save(base)
 
-        //WebSocket tututututu
         statusObservers[baseId]?.invoke(base)
     }
 
@@ -64,5 +53,4 @@ class BaseService(
         println("Próba usuwania bazy ${base.sourceUrl}")
         baseRepository.delete(base)
     }
-
 }

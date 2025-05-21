@@ -1,6 +1,6 @@
 package com.owomeb.backend._5gbemowobackend.hybridbase.registry
 
-import com.owomeb.backend._5gbemowobackend.hybridbase.builder.CommissionService
+import com.owomeb.backend._5gbemowobackend.hybridbase.newbuilder.CommissionManager
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -8,20 +8,36 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/bases")
 class BaseController(
     private val baseService: BaseService,
-    private val commissionService: CommissionService
+    private val commissionManager: CommissionManager
 ) {
 
-    @GetMapping("/methods", produces = ["application/json"])
+    @GetMapping("/methods/get-all", produces = ["application/json"])
     fun getBaseCreatingMethods(): List<String> {
         return BaseCreatingMethods.entries.map { it.name }
     }
+
+    @PostMapping("/create")
+    fun createBase(@RequestBody request: CreateBaseRequest): ResponseEntity<Any> {
+        return try {
+            val baseId = baseService.createBase(request.sourceUrl, request.selectedMethod, request.userId)
+            commissionManager.submitCommission(
+                baseId = baseId,
+                sourceUrl = request.sourceUrl,
+                method = BaseCreatingMethods.valueOf(request.selectedMethod)
+            )
+            ResponseEntity.ok(mapOf("message" to "Base successfully created", "baseId" to baseId))
+        } catch (ex: Exception) {
+            ResponseEntity.badRequest().body(mapOf("message" to "Error during base creation", "error" to ex.message))
+        }
+    }
+
+
 
     @GetMapping
     fun getAllBases(): List<BaseEntity> {
         println("getAllBases")
         return baseService.listAllBases()
     }
-
     fun deleteBaseBySourceUrl(url: String) {
         println("Próba usuwaniaDELETEBASEBYSOURCEURL")
         val base = baseService.findBySourceUrl(url)
@@ -39,27 +55,4 @@ class BaseController(
         else ResponseEntity.notFound().build()
     }
 
-    @GetMapping("/available-norms")
-    fun getAvailableNorms(): ResponseEntity<List<String>> {
-        println("asked")
-        val norms = listOf("https://www.3gpp.org/ftp/Specs/archive/36_series/36.331/36331-i50.zip")
-        return ResponseEntity.ok(norms)
-    }
-
-
-    @PostMapping
-    fun createBase(@RequestBody request: CreateBaseRequest): ResponseEntity<BaseEntity> {
-        val newBase = baseService.createBaseIfNotExists(request.sourceUrl)
-        println("Zlecono tworzenie bazy: $newBase")
-
-        if (newBase.status == BaseStatus.PENDING) {
-            println("Rozpoczynam przetwarzanie normy...")
-            commissionService.startCommission(newBase.id, request.sourceUrl)
-        }
-        return ResponseEntity.ok(newBase)
-    }
-
-    data class CreateBaseRequest(
-        val sourceUrl: String
-    )
 }

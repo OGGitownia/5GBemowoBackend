@@ -25,8 +25,8 @@ def process_embedding_request():
         print(f"Received JSON: {data}", flush=True)
 
         input_path = data.get("input")
-        output_docx_path = data.get("outputDir")
-        output_dir_path = data.get("outputDocx")
+        output_docx_path = data.get("outputDocx")
+        output_dir_path = data.get("outputDir")
 
         print(f"Input path: {input_path}", flush=True)
         print(f"Output DOCX path: {output_docx_path}", flush=True)

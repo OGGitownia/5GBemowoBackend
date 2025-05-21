@@ -17,7 +17,7 @@ class CommissionForCreatingDB(private val baseService: BaseService,
                               val sourceUrl: String,
                               commissionStatus: CommissionStatus = CommissionStatus.INITIAL
 ) {
-
+/*
 
     init {
         download()
@@ -116,6 +116,8 @@ class CommissionForCreatingDB(private val baseService: BaseService,
         baseService.updateStatus(baseID, BaseStatus.READY, "Baza gotowa")
         commissionStatus = CommissionStatus.DONE
     }
+
+ */
 }
 
 
