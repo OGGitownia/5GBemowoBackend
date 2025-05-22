@@ -41,4 +41,32 @@ class ChatController(
 
         return ResponseEntity("Zapytanie zostało przesłane do serwera hybrydowego", HttpStatus.ACCEPTED)
     }
+    @GetMapping("/available-models/{baseId}")
+    fun getAvailableModels(@PathVariable baseId: Long): ResponseEntity<List<String>> {
+        val result = ChatModel.entries.map { it.name }
+        println("Zwracam modele: $result")
+        return ResponseEntity.ok(result)
+    }
+
+    @GetMapping("/available-tuners/{baseId}")
+    fun getAvailableTuners(
+        @PathVariable baseId: Long,
+        @RequestParam model: String
+    ): ResponseEntity<List<String>> {
+        val result = AnswerTuner.entries.map { it.name }
+        println("Zwracam tunery: $result")
+        return ResponseEntity.ok(result)
+    }
+
+
+
+
+}
+
+enum class ChatModel {
+    LLaMA_3_8B_Q4_0, LLAMA3_MEDIUM
+}
+
+enum class AnswerTuner {
+    EXTRA_CONTEXT, CONCISE_STYLE, DOMAIN_OPTIMIZED
 }

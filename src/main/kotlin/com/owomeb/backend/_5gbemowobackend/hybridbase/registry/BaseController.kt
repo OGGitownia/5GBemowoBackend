@@ -45,6 +45,12 @@ class BaseController(
             baseService.delete(base)
         }
     }
+    fun deleteAllBases(): ResponseEntity<String> {
+        val bases = baseService.listAllBases()
+        bases.forEach { baseService.delete(it) }
+        return ResponseEntity.ok("Wszystkie bazy zostały usunięte.")
+    }
+
 
 
     @GetMapping("/{id}")
