@@ -20,27 +20,6 @@ class ChatController(
     private val chatWebSocketSender: ChatWebSocketSender
 ){
 
-    data class ChatRequest(
-        val baseName: String,
-        val question: String
-    )
-
-    @PostMapping("/ask")
-    fun handleQuestion(@RequestBody request: ChatRequest): ResponseEntity<String> {
-
-        val question = Question(
-            question = request.question,
-            hybridSearchService = hybridSearchService,
-            questionStatus = QuestionStatus.ADOPTED,
-            baseRepository = baseRepository,
-            appPathsConfig = appPathsConfig,
-            baseURL = request.baseName,
-            lamoAsker = lamoAsker,
-            chatWebSocketSender = chatWebSocketSender
-        )
-
-        return ResponseEntity("Zapytanie zostało przesłane do serwera hybrydowego", HttpStatus.ACCEPTED)
-    }
     @GetMapping("/available-models/{baseId}")
     fun getAvailableModels(@PathVariable baseId: Long): ResponseEntity<List<String>> {
         val result = ChatModel.entries.map { it.name }
