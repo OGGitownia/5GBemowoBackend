@@ -58,6 +58,7 @@ class MessageService(
             while (true) {
                 val message = queue.take()
                 println("Processing message: ${message.id} using model ${message.modelName}")
+                println(message.question)
                 processMessage(message)
             }
         }
@@ -109,6 +110,8 @@ class MessageService(
                                 "prompt" to prompt,
                                 "stream" to false
                             )
+                            println("Piastow")
+                            println(prompt)
 
                             val response = ollamaClient.post()
                                 .uri("/api/generate")
