@@ -2,7 +2,6 @@ package com.owomeb.backend._5gbemowobackend.messageBank
 
 import jakarta.persistence.*
 import java.time.Instant
-import java.time.LocalDateTime
 
 @Entity
 @Table(name = "chat_messages")
@@ -26,7 +25,6 @@ data class MessageEntity(
     @Column(name = "tuner")
     val tuners: MutableList<String> = mutableListOf(),
 
-
     @Column(nullable = false)
     val askedAt: Instant = Instant.now(),
 
@@ -40,5 +38,8 @@ data class MessageEntity(
     val userId: Long = 0L,
 
     @Column(nullable = false)
-    val chatId: String = ""
+    val chatId: String = "",
+
+    @Column(nullable = false)
+    val baseId: String = ""
 )

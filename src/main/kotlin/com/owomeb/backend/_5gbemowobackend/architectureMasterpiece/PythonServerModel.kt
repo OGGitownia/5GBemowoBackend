@@ -24,7 +24,7 @@ abstract class PythonServerModel<T>(
     protected val queue: StateFlow<List<T>> = _queue.asStateFlow()
 
 
-    private var actualPort: Int = findAvailablePort()
+    protected var actualPort: Int = findAvailablePort()
     val serverName: String = serverName?.takeIf { isUniqueName(it) } ?: generateUniqueName()
 
     init {
@@ -126,7 +126,7 @@ abstract class PythonServerModel<T>(
         }
     }
 
-    private fun sendRequestToPython(item: T, callback: (String) -> Unit) {
+    protected open fun sendRequestToPython(item: T, callback: (String) -> Unit) {
         thread {
             try {
                 val url = URL("http://localhost:$actualPort/$serverName/process")

@@ -13,6 +13,7 @@ import sys
 sys.stdout.reconfigure(encoding='utf-8')
 
 # === CONFIGURATION ===
+
 server_name = sys.argv[1] if len(sys.argv) > 1 else "hybrid_search_server"
 port = int(sys.argv[2]) if len(sys.argv) > 2 else 5003
 SPRING_BOOT_NOTIFY = f"http://localhost:8080/{server_name}/server-ready"

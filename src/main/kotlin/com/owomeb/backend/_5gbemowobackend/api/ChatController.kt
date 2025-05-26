@@ -12,13 +12,7 @@ import org.springframework.http.HttpStatus
 
 @RestController
 @RequestMapping("/api/chat")
-class ChatController(
-    private val hybridSearchService: HybridSearchService,
-    private val baseRepository: BaseRepository,
-    private val appPathsConfig: AppPathsConfig,
-    private val lamoAsker: LamoAsker,
-    private val chatWebSocketSender: ChatWebSocketSender
-){
+class ChatController() {
 
     @GetMapping("/available-models/{baseId}")
     fun getAvailableModels(@PathVariable baseId: Long): ResponseEntity<List<String>> {
@@ -29,17 +23,12 @@ class ChatController(
 
     @GetMapping("/available-tuners/{baseId}")
     fun getAvailableTuners(
-        @PathVariable baseId: Long,
-        @RequestParam model: String
+        @PathVariable baseId: Long, @RequestParam model: String
     ): ResponseEntity<List<String>> {
         val result = AnswerTuner.entries.map { it.name }
         println("Zwracam tunery: $result")
         return ResponseEntity.ok(result)
     }
-
-
-
-
 }
 
 enum class ChatModel {

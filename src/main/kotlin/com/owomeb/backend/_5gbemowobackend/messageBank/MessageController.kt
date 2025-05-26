@@ -15,6 +15,7 @@ class MessageController(private val messageRepository: MessageRepository,
 
     @PostMapping("/ask")
     fun handleUserQuestion(@RequestBody dto: MessageDTO): ResponseEntity<String> {
+        println(dto)
         val message = MessageEntity(
             id = dto.id,
             question = dto.question,
@@ -25,11 +26,10 @@ class MessageController(private val messageRepository: MessageRepository,
             chatId = dto.chatId,
             answer = dto.answer,
             answeredAt = dto.answeredAt?.let { Instant.ofEpochMilli(it) },
-            answered = dto.answered
+            answered = dto.answered,
+            baseId = dto.baseId
         )
         messageRepository.save(message)
-
-        println(message)
         messageService.addAnswerToQueue(message)
 
         return ResponseEntity.ok("Message received and processing started")

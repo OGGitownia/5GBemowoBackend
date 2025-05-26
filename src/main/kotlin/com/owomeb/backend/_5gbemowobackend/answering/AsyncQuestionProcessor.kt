@@ -1,7 +1,6 @@
 package com.owomeb.backend._5gbemowobackend.answering
 
 import com.owomeb.backend._5gbemowobackend.core.AppPathsConfig
-import com.owomeb.backend._5gbemowobackend.api.ChatWebSocketSender
 import com.owomeb.backend._5gbemowobackend.hybridbase.registry.BaseRepository
 import com.owomeb.backend._5gbemowobackend.hybridbase.retrieval.HybridSearchService
 import java.io.File
@@ -12,7 +11,6 @@ class Question(private val hybridSearchService: HybridSearchService,
                private val baseRepository: BaseRepository,
                private val appPathsConfig: AppPathsConfig,
                private val lamoAsker: LamoAsker,
-               private val chatWebSocketSender: ChatWebSocketSender,
                questionStatus: QuestionStatus = QuestionStatus.ADOPTED,
                private val question: String,
                private val baseURL: String){
@@ -96,17 +94,20 @@ class Question(private val hybridSearchService: HybridSearchService,
 
 
     private fun gatherContext() {
+        /*
         hybridSearchService.search(
             question = this,
             query = question,
             basePath = basePath,
         )
+
+         */
     }
 
 
     private fun deliver() {
         println("deliver$answer")
-        chatWebSocketSender.sendAnswer(answer)
+        //chatWebSocketSender.sendAnswer(answer)
         addToAnserQuestionHistory(appPathsConfig.getHistoryPath())
     }
 
