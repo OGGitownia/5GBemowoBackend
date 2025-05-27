@@ -12,6 +12,8 @@ class CommissionForDBUncompromising(
     private val normManager: NormManager,
     private val photoExtraction: PhotoExtraction,
     private val markdownManager: FinalMarkdown,
+    private val embeddingManager: NewEmbeddingManager,
+    private val hybridDbCreator: HybridDbCreator,
     private val sourceUrl: String
 )  : Commission(baseId) {
     private var status: CommissionStatus = CommissionStatus.INITIAL
@@ -45,6 +47,18 @@ class CommissionForDBUncompromising(
                     }
                 }
                 4 -> {
+                embed(baseService) {
+                    currentStage++
+                    proceed(baseService)
+                }
+            }
+                5 -> {
+                    hybridBase(baseService) {
+                        currentStage++
+                        proceed(baseService)
+                    }
+                }
+                6 -> {
                     finalizeCommission(baseService)
                 }
             }
@@ -97,6 +111,23 @@ class CommissionForDBUncompromising(
         TimeUnit.SECONDS.sleep(1)
         status = CommissionStatus.CHUNKED
         onFinish()
+    }
+    private fun embed(baseService: BaseService, onFinish: () -> Unit) {
+        updateStatus(baseService, BaseStatus.PROCESSING, "Generowanie embeddingów")
+        embeddingManager.generateEmbeddingsForJson(
+            inputFilePath = appPathsConfig.getChunkedJsonPath(baseId.toString()),
+            outputFile = appPathsConfig.getEmbeddedJsonPath(baseId.toString()),
+            onFinish = onFinish
+        )
+    }
+    private fun hybridBase(baseService: BaseService, onFinish: () -> Unit) {
+        status = CommissionStatus.EMBEDDED
+        updateStatus(baseService, BaseStatus.PROCESSING, "Tworzenie bazy hybrydowej")
+        hybridDbCreator.createDb(
+            inputFilePath = appPathsConfig.getEmbeddedJsonPath(baseId.toString()),
+            outputFilePath = appPathsConfig.getHybridBaseDirectory(baseId.toString()),
+            onFinish = onFinish
+        )
     }
     private fun finalizeCommission(baseService: BaseService) {
         status = CommissionStatus.HYBRID_BASED

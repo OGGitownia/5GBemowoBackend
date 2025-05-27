@@ -139,9 +139,67 @@ class MessageService(
 
 
     private suspend fun simulateLlama3Medium(message: MessageEntity) {
-        delay(3000)
-        saveAnswer(message, "This is a simulated answer from LLaMA 3 medium")
+        try {
+            hybridSearchService.search(
+                query = message.question,
+                basePath = appPathsConfig.getHybridBaseDirectory(message.baseId),
+                onFinish = { contextForQuery ->
+
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val openAiApiKey = System.getenv("OPENAI_API_KEY")  // lub wstrzykiwane z konfiguracji
+                            val openAiClient = WebClient.builder()
+                                .baseUrl("https://api.openai.com/v1")
+                                .defaultHeader("Authorization", "Bearer $openAiApiKey")
+                                .defaultHeader("Content-Type", "application/json")
+                                .build()
+
+                            val systemPrompt = """
+                            You are a helpful assistant. 
+                            Answer the question strictly based on the provided context.
+                            If you see any reference like photo_X.Y (e.g., photo_2.emf), place it on a separate line at the end of the answer.
+                            Never answer from outside the context, and if you’re unsure, say so.
+                        """.trimIndent()
+
+                            val userContextMessage = """
+                            Context:
+                            $contextForQuery
+                        """.trimIndent()
+
+                            val requestBody = mapOf(
+                                "model" to "gpt-4",  // lub "gpt-3.5-turbo"
+                                "messages" to listOf(
+                                    mapOf("role" to "system", "content" to systemPrompt),
+                                    mapOf("role" to "user", "content" to userContextMessage),
+                                    mapOf("role" to "user", "content" to message.question)
+                                ),
+                                "stream" to false
+                            )
+
+                            val response = openAiClient.post()
+                                .uri("/chat/completions")
+                                .bodyValue(requestBody)
+                                .retrieve()
+                                .bodyToMono(OpenAiResponse::class.java)
+                                .awaitSingle()
+
+                            val answer = response.choices.firstOrNull()?.message?.content ?: "No answer generated."
+                            val updatedMessage = saveAnswer(message, answer)
+                            messageSocketHandler.sendMessageToUser(message.userId, updatedMessage)
+
+                        } catch (e: Exception) {
+                            println("OpenAI GPT API failed: ${e.message}")
+                            saveAnswer(message, "Error while calling GPT: ${e.message}")
+                        }
+                    }
+                }
+            )
+        } catch (e: Exception) {
+            println("Hybrid search failed: ${e.message}")
+            saveAnswer(message, "Error in hybrid search: ${e.message}")
+        }
     }
+
 
     private suspend fun simulateLlama4Scout(message: MessageEntity) {
         delay(2500)
