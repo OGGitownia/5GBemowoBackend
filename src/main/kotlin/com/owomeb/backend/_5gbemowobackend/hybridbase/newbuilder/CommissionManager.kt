@@ -55,7 +55,9 @@ class CommissionManager(
                 appPathsConfig = appPathsConfig,
                 normManager = normManager,
                 markdownManager = markdownManager,
-                photoExtraction = photoExtraction
+                photoExtraction = photoExtraction,
+                embeddingManager = embeddingManager,
+                hybridDbCreator = hybridDbCreator,
             )
         }
         queue.put(commission)
