@@ -51,6 +51,11 @@ class CommissionManager(
             )
             BaseCreatingMethods.UNCOMPROMISINGNESS -> CommissionForDBUncompromising(
                 baseId = baseId,
+                sourceUrl = sourceUrl,
+                appPathsConfig = appPathsConfig,
+                normManager = normManager,
+                markdownManager = markdownManager,
+                photoExtraction = photoExtraction
             )
         }
         queue.put(commission)

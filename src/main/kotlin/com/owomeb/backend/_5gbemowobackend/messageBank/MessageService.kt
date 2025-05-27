@@ -1,12 +1,10 @@
-package com.owomeb.backend._5gbemowobackend.answering
+package com.owomeb.backend._5gbemowobackend.messageBank
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.owomeb.backend._5gbemowobackend.api.MessageSocketHandler
 import com.owomeb.backend._5gbemowobackend.core.AppPathsConfig
 import com.owomeb.backend._5gbemowobackend.hybridbase.retrieval.HybridSearchService
-import com.owomeb.backend._5gbemowobackend.messageBank.MessageEntity
-import com.owomeb.backend._5gbemowobackend.messageBank.MessageRepository
 import jakarta.annotation.PostConstruct
 import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
@@ -64,7 +62,7 @@ class MessageService(
         }
     }
 
-    fun addAnswerToQueue(message: MessageEntity) {
+    fun addQuestionToQueue(message: MessageEntity) {
         queue.put(message)
     }
 

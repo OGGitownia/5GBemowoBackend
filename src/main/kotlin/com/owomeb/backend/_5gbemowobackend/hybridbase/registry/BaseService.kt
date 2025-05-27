@@ -37,7 +37,7 @@ class BaseService(
         base.statusMessage = message
         baseRepository.save(base)
 
-        statusObservers[baseId]?.invoke(base)
+        statusObservers[baseId]?.invoke(base) // co robi ta linijka
     }
 
     fun registerStatusObserver(baseId: Long, callback: (BaseEntity) -> Unit) {

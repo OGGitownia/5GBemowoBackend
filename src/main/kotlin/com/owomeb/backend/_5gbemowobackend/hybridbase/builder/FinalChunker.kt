@@ -333,13 +333,12 @@ class FinalChunker(
         for ((title, content, level, mergedTitle) in chunks) {
             val words = content.split("\\s+".toRegex()).filter { it.isNotEmpty() }
 
-            // ✂️ Warunek podziału - tylko jeśli długość przekracza 135% desirableLen
             if (words.size <= (desirableLen * 1.35).toInt()) {
                 result.add(Quadruple(title, content, level, mergedTitle))
                 continue
             }
 
-            // ✅ Obliczanie ilości słów, które dochodzą do każdego fragmentu
+
             val additionalWords = mergedTitle.split("\\s+".toRegex()).size + 10 + 7
             val availableWords = desirableLen - additionalWords
 
@@ -348,18 +347,18 @@ class FinalChunker(
                 continue
             }
 
-            // ✅ Obliczanie ilości fragmentów
+
             val fragmentCount = Math.ceil(words.size / availableWords.toDouble()).toInt()
 
-            // ✅ Obliczenie optymalnego overlapu
+
             val overlap = Math.max(minOverlap, (fragmentCount * availableWords - words.size) / (fragmentCount - 1))
 
             if (overlap < minOverlap) {
-                println("⚠️ ERROR: Calculated overlap is smaller than minimum allowed. Skipping chunk: $title")
+                println("ERROR: Calculated overlap is smaller than minimum allowed. Skipping chunk: $title")
                 continue
             }
 
-            println("✅ Splitting chunk: $title into $fragmentCount parts, overlap: $overlap")
+            println("Splitting chunk: $title into $fragmentCount parts, overlap: $overlap")
 
             // Generowanie nowych fragmentów
             for (i in 0 until fragmentCount) {
@@ -367,7 +366,7 @@ class FinalChunker(
                 val end = minOf(start + availableWords, words.size)
 
                 if (start >= end) {
-                    println("⚠️ Invalid range detected. start: $start, end: $end, chunk skipped.")
+                    println("Invalid range detected. start: $start, end: $end, chunk skipped.")
                     break
                 }
 

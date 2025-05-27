@@ -8,12 +8,17 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @Configuration
 @EnableWebSocket
 class WebSocketConfig(
-    private val messageSocketHandler: MessageSocketHandler
+    private val messageSocketHandler: MessageSocketHandler,
+    private val statusWebSocketHandler: StatusWebSocketHandler
 ) : WebSocketConfigurer {
 
     override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
         registry
             .addHandler(messageSocketHandler, "/ws/messages")
-            .setAllowedOrigins("*") // dla testów – później ogranicz do domeny
+            .setAllowedOrigins("*")
+
+        registry
+            .addHandler(statusWebSocketHandler, "/ws/status")
+            .setAllowedOrigins("*")
     }
 }

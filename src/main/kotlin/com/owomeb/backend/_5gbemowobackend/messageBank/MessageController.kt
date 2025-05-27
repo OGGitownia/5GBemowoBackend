@@ -1,6 +1,5 @@
 package com.owomeb.backend._5gbemowobackend.messageBank
 
-import com.owomeb.backend._5gbemowobackend.answering.MessageService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -10,7 +9,8 @@ import java.time.Instant
 @RestController
 @RequestMapping("/api/messages")
 class MessageController(private val messageRepository: MessageRepository,
-    private val messageService: MessageService) {
+    private val messageService: MessageService
+) {
 
 
     @PostMapping("/ask")
@@ -30,7 +30,7 @@ class MessageController(private val messageRepository: MessageRepository,
             baseId = dto.baseId
         )
         messageRepository.save(message)
-        messageService.addAnswerToQueue(message)
+        messageService.addQuestionToQueue(message)
 
         return ResponseEntity.ok("Message received and processing started")
     }
