@@ -16,7 +16,7 @@ class ServerStartupManager(
     fun serverStartup() {
         println("Hello World!")
 
-        baseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/latest/Rel-18/36_series/36331-i50.zip")
+        //baseController.deleteBaseBySourceUrl("https://www.3gpp.org/ftp/Specs/latest/Rel-18/36_series/36331-i50.zip")
         //baseController.deleteAllBases()
     }
     @EventListener(ApplicationReadyEvent::class)
