@@ -23,7 +23,8 @@ repositories {
 
 
 dependencies {
-
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.+")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-mail")
@@ -36,6 +37,11 @@ dependencies {
     implementation("org.jsoup:jsoup:1.17.2")
     implementation("org.freehep:freehep-graphicsio-emf:2.4")
     implementation("com.google.guava:guava:32.1.2-jre")
+
+
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 
 
     implementation("org.apache.poi:poi-scratchpad:5.2.5")

@@ -13,15 +13,26 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import java.time.Instant
 import java.util.concurrent.LinkedBlockingQueue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.ParameterizedTypeReference
 
 @Service
 class MessageService(
+    @Value("\${google.api.key}") private val googleApiKey: String,
+    @Value("\${google.api.model}") private val googleApiModel: String,
+    @Value("\${google.api.baseurl}") private val googleApiBaseUrl: String,
+    @Value("\${openai.api.key}") private val openAiApiKey: String,
+
     private val messageRepository: MessageRepository,
     private val hybridSearchService: HybridSearchService,
     private val appPathsConfig: AppPathsConfig,
     private val messageSocketHandler: MessageSocketHandler
-) {
 
+) {
+    private val googleAiClient = WebClient.create(googleApiBaseUrl)
     private val queue = LinkedBlockingQueue<MessageEntity>()
     private val scope = CoroutineScope(Dispatchers.Default)
     private val ollamaClient = WebClient.create("http://localhost:11434")
@@ -150,72 +161,131 @@ Context:
     }
 
 
+    //OpenAI
     private suspend fun simulateLlama3Medium(message: MessageEntity) {
+        println("Processing message ${message.id} via 'LLAMA3_MEDIUM' (OpenAI GPT)")
+
         try {
             hybridSearchService.search(
                 query = message.question,
                 basePath = appPathsConfig.getHybridBaseDirectory(message.baseId),
                 onFinish = { contextForQuery ->
-
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
-                            val openAiApiKey = System.getenv("OPENAI_API_KEY")  // lub wstrzykiwane z konfiguracji
-                            val openAiClient = WebClient.builder()
-                                .baseUrl("https://api.openai.com/v1")
-                                .defaultHeader("Authorization", "Bearer $openAiApiKey")
-                                .defaultHeader("Content-Type", "application/json")
-                                .build()
+                            val prompt = PROMPT_TEMPLATE
+                                .replace("{context}", contextForQuery)
+                                .replace("{question}", message.question)
 
-                            val systemPrompt = """
-                            You are a helpful assistant. 
-                            Answer the question strictly based on the provided context.
-                            If you see any reference like photo_X.Y (e.g., photo_2.emf), place it on a separate line at the end of the answer.
-                            Never answer from outside the context, and if you’re unsure, say so.
-                        """.trimIndent()
-
-                            val userContextMessage = """
-                            Context:
-                            $contextForQuery
-                        """.trimIndent()
-
-                            val requestBody = mapOf(
-                                "model" to "gpt-4",  // lub "gpt-3.5-turbo"
+                            val request = mapOf(
+                                "model" to "gpt-4", // albo gpt-3.5-turbo
                                 "messages" to listOf(
-                                    mapOf("role" to "system", "content" to systemPrompt),
-                                    mapOf("role" to "user", "content" to userContextMessage),
-                                    mapOf("role" to "user", "content" to message.question)
-                                ),
-                                "stream" to false
+                                    mapOf("role" to "system", "content" to SYSTEM_PROMPT),
+                                    mapOf("role" to "user", "content" to prompt)
+                                )
                             )
+
+                            val openAiClient = WebClient.create("https://api.openai.com/v1")
 
                             val response = openAiClient.post()
                                 .uri("/chat/completions")
-                                .bodyValue(requestBody)
+                                .header("Authorization", "Bearer $openAiApiKey")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(request)
                                 .retrieve()
                                 .bodyToMono(OpenAiResponse::class.java)
                                 .awaitSingle()
 
-                            val answer = response.choices.firstOrNull()?.message?.content ?: "No answer generated."
-                            val updatedMessage = saveAnswer(message, answer)
+                            val answerText = response.choices.firstOrNull()?.message?.content
+                                ?: "No response from OpenAI."
+
+                            val updatedMessage = saveAnswer(message, answerText)
                             messageSocketHandler.sendMessageToUser(message.userId, updatedMessage)
 
                         } catch (e: Exception) {
-                            println("OpenAI GPT API failed: ${e.message}")
-                            saveAnswer(message, "Error while calling GPT: ${e.message}")
+                            val errorMsg = "OpenAI API call failed for message ${message.id}: ${e.message}"
+                            println(errorMsg)
+                            saveAnswer(message, "Error with OpenAI GPT (LLAMA3_MEDIUM): ${e.message}")
                         }
                     }
                 }
             )
         } catch (e: Exception) {
-            println("Hybrid search failed: ${e.message}")
-            saveAnswer(message, "Error in hybrid search: ${e.message}")
+            val errorMsg = "Hybrid search failed (LLAMA3_MEDIUM) for message ${message.id}: ${e.message}"
+            println(errorMsg)
+            saveAnswer(message, "Error in search (LLAMA3_MEDIUM): ${e.message}")
         }
     }
 
 
+
+    //GoogleAI
     private suspend fun simulateLlama4Scout(message: MessageEntity) {
-        delay(2500)
-        saveAnswer(message, "This is a simulated answer from GPT-4 Turbo.")
+        println("Processing message ${message.id} via 'LLAMA3_SCOUT' (Google AI). Model in message: ${message.modelName}")
+
+        try {
+            hybridSearchService.search(
+                query = message.question,
+                basePath = appPathsConfig.getHybridBaseDirectory(message.baseId),
+                onFinish = { contextForQuery ->
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val fullPrompt = """
+                            $SYSTEM_PROMPT
+
+                            ${PROMPT_TEMPLATE
+                                .replace("{context}", contextForQuery)
+                                .replace("{question}", message.question)}
+                        """.trimIndent()
+
+                            // Użyj domyślnego modelu Google skonfigurowanego w aplikacji (googleApiModel)
+                            // lub zdefiniuj specyficzny model dla 'LLAMA3_SCOUT', np.:
+                            // val effectiveGoogleModel = "gemini-1.5-pro-latest"
+                            val effectiveGoogleModel = googleApiModel
+
+                            val requestBody = GeminiRequest(
+                                contents = listOf(Content(parts = listOf(Part(text = fullPrompt))))
+                                // Możesz dodać generationConfig, np.:
+                                // generationConfig = GenerationConfig(temperature = 0.7f, maxOutputTokens = 2048)
+                            )
+
+                            println("Sending request to Google AI model '$effectiveGoogleModel' (for LLAMA3_SCOUT, message ${message.id})")
+
+                            val response = googleAiClient.post()
+                                .uri("/v1beta/models/${effectiveGoogleModel}:generateContent?key=${googleApiKey}")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(requestBody)
+                                .retrieve()
+                                .bodyToMono(object : ParameterizedTypeReference<GeminiResponse>() {})
+
+                                .awaitSingle()
+
+                            val answerText = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
+                                ?: run {
+                                    val finishReason = response.candidates?.firstOrNull()?.finishReason
+                                    val safetyRatings = response.promptFeedback?.safetyRatings?.joinToString { "${it.category}: ${it.probability}" }
+                                    var errorMessage = "Error: No content from Gemini (LLAMA3_SCOUT)."
+                                    if (finishReason != null) errorMessage += " Reason: $finishReason."
+                                    if (safetyRatings != null && safetyRatings.isNotEmpty()) errorMessage += " Safety: $safetyRatings."
+                                    errorMessage
+                                }
+
+                            val updatedMessage = saveAnswer(message, answerText)
+                            messageSocketHandler.sendMessageToUser(message.userId, updatedMessage)
+
+                        } catch (e: Exception) {
+                            val errorMsg = "Google AI API call failed (LLAMA3_SCOUT) for message ${message.id}: ${e.message}"
+                            println(errorMsg)
+                            e.printStackTrace()
+                            saveAnswer(message, "Error with Google AI (LLAMA3_SCOUT): ${e.message}")
+                        }
+                    }
+                }
+            )
+        } catch (e: Exception) {
+            val errorMsg = "Hybrid search failed (LLAMA3_SCOUT) for message ${message.id}: ${e.message}"
+            println(errorMsg)
+            saveAnswer(message, "Error in search (LLAMA3_SCOUT): ${e.message}")
+        }
     }
 
     private suspend fun simulateDefault(message: MessageEntity) {
