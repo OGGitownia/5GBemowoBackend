@@ -12,7 +12,7 @@ object NormSpecificationFetcher {
 
     fun fetchAndParseReleases(): List<Release> {
         val options = ChromeOptions()
-        options.addArguments("--headless=new") // nowy headless dla lepszej obsługi
+        options.addArguments("--headless=new")
         val driver: WebDriver = ChromeDriver(options)
 
         return try {

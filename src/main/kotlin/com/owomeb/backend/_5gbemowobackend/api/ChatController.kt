@@ -1,14 +1,8 @@
 package com.owomeb.backend._5gbemowobackend.api
 
-import com.owomeb.backend._5gbemowobackend.answering.LamoAsker
-import com.owomeb.backend._5gbemowobackend.core.AppPathsConfig
-import com.owomeb.backend._5gbemowobackend.answering.Question
-import com.owomeb.backend._5gbemowobackend.answering.QuestionStatus
-import com.owomeb.backend._5gbemowobackend.hybridbase.registry.BaseRepository
-import com.owomeb.backend._5gbemowobackend.hybridbase.retrieval.HybridSearchService
-import org.springframework.web.bind.annotation.*
+
 import org.springframework.http.ResponseEntity
-import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/chat")
@@ -32,9 +26,12 @@ class ChatController() {
 }
 
 enum class ChatModel {
-    LLaMA_3_8B_Q4_0, LLAMA3_MEDIUM
+    LLaMA_3_8B_Q4_0,
+    CHAT_GPT4_1,
+    GEMINI_2_5_PRO
 }
 
+
 enum class AnswerTuner {
-    EXTRA_CONTEXT, CONCISE_STYLE, DOMAIN_OPTIMIZED
+
 }

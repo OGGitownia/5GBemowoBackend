@@ -35,7 +35,7 @@ abstract class PythonServerModel<T>(
     private fun startServer() {
         thread {
             try {
-                val processBuilder = ProcessBuilder("C:\\Users\\Bartek\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe",
+                val processBuilder = ProcessBuilder("C:\\Users\\Pc\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
                     scriptPath,
                     serverName,
                     actualPort.toString()
@@ -123,7 +123,6 @@ abstract class PythonServerModel<T>(
             val item = _queue.value.first()
             sendRequestToPython(item) { result ->
                 publishResult(result, item)
-                ////
                 _queue.value = _queue.value.drop(1)
                 processQueueIfNeeded()
             }

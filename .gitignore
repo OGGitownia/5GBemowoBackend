@@ -39,3 +39,4 @@ out/
 ### Kotlin ###
 .kotlin
 /src/main/resources/pythonScripts/models/
+src/main/resources/application.properties

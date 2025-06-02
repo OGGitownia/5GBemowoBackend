@@ -40,12 +40,6 @@ class AppPathsConfig {
     fun getHybridBaseDirectory(normName: String): String {
         return "${getNormDirectory(normName)}/hybrid_base"
     }
-    fun getHistoryPath(): String {
-        return "src/main/resources/history/historyOneOne.txt"
-    }
-    fun getPhotoExtractedDocx(normName: String): String{
-        return "${getNormDirectory(normName)}/normAsDocxWithAfterExtraction.docx"
-    }
 
 
 }

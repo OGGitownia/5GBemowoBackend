@@ -19,6 +19,8 @@ import kotlinx.coroutines.launch
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.ParameterizedTypeReference
 
+
+
 @Service
 class MessageService(
     @Value("\${google.api.key}") private val googleApiKey: String,
@@ -30,7 +32,6 @@ class MessageService(
     private val hybridSearchService: HybridSearchService,
     private val appPathsConfig: AppPathsConfig,
     private val messageSocketHandler: MessageSocketHandler
-
 ) {
     private val googleAiClient = WebClient.create(googleApiBaseUrl)
     private val queue = LinkedBlockingQueue<MessageEntity>()
@@ -94,7 +95,7 @@ Context:
     private suspend fun ensureOllamaRunning() {
         try {
             val process = withContext(Dispatchers.IO) {
-                ProcessBuilder("ollama", "run", "llama2:13b")
+                ProcessBuilder("ollama", "run", "llama3")
                     .redirectOutput(ProcessBuilder.Redirect.INHERIT)
                     .redirectError(ProcessBuilder.Redirect.INHERIT)
                     .start()
@@ -109,8 +110,8 @@ Context:
     private suspend fun processMessage(message: MessageEntity) {
         when (message.modelName) {
             "LLaMA_3_8B_Q4_0" -> queryLlama3(message)
-            "LLAMA3_MEDIUM" -> simulateLlama4Scout(message)
-            "LLAMA3_SCOUT" -> simulateLlama3Medium(message)
+            "CHAT_GPT4_1" -> queryChatGpt(message)
+            "GEMINI_2_5_PRO" -> queryGemini(message)
             else -> simulateDefault(message)
         }
     }
@@ -129,7 +130,7 @@ Context:
                                 .replace("{question}", message.question)
 
                             val request = mapOf(
-                                "model" to "llama2:13b",
+                                "model" to "llama3",
                                 "system" to SYSTEM_PROMPT,
                                 "prompt" to prompt,
                                 "stream" to false
@@ -163,10 +164,8 @@ Context:
         }
     }
 
-
-    //OpenAI
-    private suspend fun simulateLlama3Medium(message: MessageEntity) {
-        println("Processing message ${message.id} via 'LLAMA3_MEDIUM' (OpenAI GPT)")
+    private suspend fun queryChatGpt(message: MessageEntity) {
+        println("Processing message ${message.id} via 'queryChatGpt' (OpenAI GPT)")
 
         try {
             hybridSearchService.search(
@@ -180,7 +179,7 @@ Context:
                                 .replace("{question}", message.question)
 
                             val request = mapOf(
-                                "model" to "gpt-4", // albo gpt-3.5-turbo
+                                "model" to "gpt-4.1-2025-04-14",
                                 "messages" to listOf(
                                     mapOf("role" to "system", "content" to SYSTEM_PROMPT),
                                     mapOf("role" to "user", "content" to prompt)
@@ -207,7 +206,7 @@ Context:
                         } catch (e: Exception) {
                             val errorMsg = "OpenAI API call failed for message ${message.id}: ${e.message}"
                             println(errorMsg)
-                            saveAnswer(message, "Error with OpenAI GPT (LLAMA3_MEDIUM): ${e.message}")
+                            saveAnswer(message, "Error with OpenAI GPT (ChatGpt): ${e.message}")
                         }
                     }
                 }
@@ -219,11 +218,8 @@ Context:
         }
     }
 
-
-
-    //GoogleAI
-    private suspend fun simulateLlama4Scout(message: MessageEntity) {
-        println("Processing message ${message.id} via 'LLAMA3_SCOUT' (Google AI). Model in message: ${message.modelName}")
+    private suspend fun queryGemini(message: MessageEntity) {
+        println("Processing message ${message.id} via 'queryGemini' (Google AI). Model in message: ${message.modelName}")
 
         try {
             hybridSearchService.search(
@@ -240,33 +236,21 @@ Context:
                                 .replace("{question}", message.question)}
                         """.trimIndent()
 
-                            // Użyj domyślnego modelu Google skonfigurowanego w aplikacji (googleApiModel)
-                            // lub zdefiniuj specyficzny model dla 'LLAMA3_SCOUT', np.:
-                            // val effectiveGoogleModel = "gemini-1.5-pro-latest"
                             val effectiveGoogleModel = googleApiModel
 
                             val requestBody = GeminiRequest(
                                 contents = listOf(Content(parts = listOf(Part(text = fullPrompt))))
-                                // Możesz dodać generationConfig, np.:
-                                // generationConfig = GenerationConfig(temperature = 0.7f, maxOutputTokens = 2048)
                             )
 
-                            println("Sending request to Google AI model '$effectiveGoogleModel' (for LLAMA3_SCOUT, message ${message.id})")
+                            println("Sending request to Google AI model '$effectiveGoogleModel' (for Gemini, message ${message.id})")
 
-                            val response = googleAiClient.post()
-                                .uri("/v1beta/models/${effectiveGoogleModel}:generateContent?key=${googleApiKey}")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(requestBody)
-                                .retrieve()
-                                .bodyToMono(object : ParameterizedTypeReference<GeminiResponse>() {})
-
-                                .awaitSingle()
+                            val response = callGeminiWithRetryOnce(requestBody, effectiveGoogleModel)
 
                             val answerText = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
                                 ?: run {
                                     val finishReason = response.candidates?.firstOrNull()?.finishReason
                                     val safetyRatings = response.promptFeedback?.safetyRatings?.joinToString { "${it.category}: ${it.probability}" }
-                                    var errorMessage = "Error: No content from Gemini (LLAMA3_SCOUT)."
+                                    var errorMessage = "Error: No content from Gemini (Gemini)."
                                     if (finishReason != null) errorMessage += " Reason: $finishReason."
                                     if (safetyRatings != null && safetyRatings.isNotEmpty()) errorMessage += " Safety: $safetyRatings."
                                     errorMessage
@@ -276,24 +260,48 @@ Context:
                             messageSocketHandler.sendMessageToUser(message.userId, updatedMessage)
 
                         } catch (e: Exception) {
-                            val errorMsg = "Google AI API call failed (LLAMA3_SCOUT) for message ${message.id}: ${e.message}"
+                            val errorMsg = "Google AI API call failed (Gemini) for message ${message.id}: ${e.message}"
                             println(errorMsg)
                             e.printStackTrace()
-                            saveAnswer(message, "Error with Google AI (LLAMA3_SCOUT): ${e.message}")
+                            saveAnswer(message, "Error with Google AI (Gemini): ${e.message}")
                         }
                     }
                 }
             )
         } catch (e: Exception) {
-            val errorMsg = "Hybrid search failed (LLAMA3_SCOUT) for message ${message.id}: ${e.message}"
+            val errorMsg = "Hybrid search failed (Gemini) for message ${message.id}: ${e.message}"
             println(errorMsg)
-            saveAnswer(message, "Error in search (LLAMA3_SCOUT): ${e.message}")
+            saveAnswer(message, "Error in search (Gemini): ${e.message}")
         }
     }
 
+    private suspend fun callGeminiWithRetryOnce(
+        requestBody: GeminiRequest,
+        modelName: String,
+        retryLeft: Boolean = true
+    ): GeminiResponse {
+        return try {
+            googleAiClient.post()
+                .uri("/v1beta/models/$modelName:generateContent?key=$googleApiKey")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(object : ParameterizedTypeReference<GeminiResponse>() {})
+                .awaitSingle()
+        } catch (e: Exception) {
+            if (e is java.net.SocketException && retryLeft) {
+                println("Connection reset detected, retrying once for model: $modelName")
+                callGeminiWithRetryOnce(requestBody, modelName, retryLeft = false)
+            } else {
+                throw e
+            }
+        }
+    }
+
+
+
     private suspend fun simulateDefault(message: MessageEntity) {
-        delay(1000)
-        saveAnswer(message, "This is a generic fallback answer.")
+        saveAnswer(message, "This is a the best answer for the best question")
     }
 
     private fun saveAnswer(message: MessageEntity, answer: String): MessageEntity {

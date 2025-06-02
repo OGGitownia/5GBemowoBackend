@@ -2,12 +2,19 @@ package com.owomeb.backend._5gbemowobackend.api
 
 import org.freehep.graphicsio.emf.EMFInputStream
 import org.freehep.graphicsio.emf.EMFRenderer
-import org.springframework.http.*
-import org.springframework.web.bind.annotation.*
-import java.awt.*
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import java.awt.image.BufferedImage
-import java.io.*
-import java.nio.file.*
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileInputStream
+import java.nio.file.Files
+import java.nio.file.Paths
 import javax.imageio.ImageIO
 
 @RestController
