@@ -2,30 +2,26 @@ package com.owomeb.backend._5gbemowobackend.frontendContent
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.openqa.selenium.WebDriver
-import org.openqa.selenium.chrome.ChromeDriver
-import org.openqa.selenium.chrome.ChromeOptions
 
 object NormSpecificationFetcher {
 
     private val userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
 
     fun fetchAndParseReleases(): List<Release> {
-        val options = ChromeOptions()
-        options.addArguments("--headless=new")
-        val driver: WebDriver = ChromeDriver(options)
-
         return try {
-            driver.get("https://portal.3gpp.org/Releases.aspx")
-            val html = driver.pageSource
+            val document = Jsoup.connect("https://portal.3gpp.org/Releases.aspx")
+                .userAgent(userAgentString)
+                .timeout(10_000)
+                .get()
+
+            val html = document.html()
             val allReleases = parseReleasesFromHtml(html)
 
-            // Filtrowanie tylko tych, które istnieją pod linkiem latest
             val filtered = allReleases.filter { release ->
                 val url = "https://www.3gpp.org/ftp/Specs/latest/${release.releaseId}/"
                 try {
                     val response = Jsoup.connect(url)
-                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+                        .userAgent(userAgentString)
                         .timeout(5000)
                         .ignoreHttpErrors(true)
                         .execute()
@@ -37,10 +33,12 @@ object NormSpecificationFetcher {
 
             println("Znaleziono ${filtered.size} releasów z dostępem do katalogu latest/")
             filtered
-        } finally {
-            driver.quit()
+        } catch (e: Exception) {
+            println("Błąd podczas pobierania danych z portalu 3GPP: ${e.message}")
+            emptyList()
         }
     }
+
 
 
     private fun parseReleasesFromHtml(html: String): List<Release> {

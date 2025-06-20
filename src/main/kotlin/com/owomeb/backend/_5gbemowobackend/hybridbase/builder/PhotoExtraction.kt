@@ -8,11 +8,13 @@ import org.springframework.web.bind.annotation.RestController
 import java.nio.file.Paths
 import java.util.concurrent.ConcurrentHashMap
 
+// /app/src/main/resources/pythonScripts/pythonServers/photoExtraction.py
+
 @RestController
-@RequestMapping("/unikalnanazwa")
+@RequestMapping("/photoExtraction")
 class PhotoExtraction : PythonServerModel<PhotoExtraction.AugmentedQuery>(
     scriptPath = "src/main/resources/pythonScripts/pythonServers/photoExtraction.py",
-    serverName = "unikalnanazwa",
+    serverName = "photoExtraction",
     autoClose = true
 ) {
 

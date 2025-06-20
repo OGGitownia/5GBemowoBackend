@@ -1,6 +1,5 @@
 package com.owomeb.backend._5gbemowobackend.user
 
-
 import jakarta.persistence.*
 import java.time.LocalDateTime
 

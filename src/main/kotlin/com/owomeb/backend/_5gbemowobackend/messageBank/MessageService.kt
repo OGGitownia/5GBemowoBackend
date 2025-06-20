@@ -5,19 +5,25 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.owomeb.backend._5gbemowobackend.api.MessageSocketHandler
 import com.owomeb.backend._5gbemowobackend.core.AppPathsConfig
 import com.owomeb.backend._5gbemowobackend.hybridbase.retrieval.HybridSearchService
+import io.netty.channel.ChannelOption
+import io.netty.handler.timeout.ReadTimeoutHandler
+import io.netty.handler.timeout.WriteTimeoutHandler
 import jakarta.annotation.PostConstruct
 import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
-import org.springframework.http.MediaType
-import org.springframework.stereotype.Service
-import org.springframework.web.reactive.function.client.WebClient
-import java.time.Instant
-import java.util.concurrent.LinkedBlockingQueue
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.ParameterizedTypeReference
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
+import org.springframework.http.client.reactive.ReactorClientHttpConnector
+import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.WebClient
+import reactor.netty.http.client.HttpClient
+import java.util.concurrent.LinkedBlockingQueue
+import java.time.Duration
+import java.time.Instant
+import java.util.concurrent.TimeUnit
+
 
 
 
@@ -34,9 +40,14 @@ class MessageService(
     private val messageSocketHandler: MessageSocketHandler
 ) {
     private val googleAiClient = WebClient.create(googleApiBaseUrl)
+    private lateinit var openAiClient: WebClient
+
+    private val ollamaClient = WebClient.create("http://localhost:11434")
+
+
     private val queue = LinkedBlockingQueue<MessageEntity>()
     private val scope = CoroutineScope(Dispatchers.Default)
-    private val ollamaClient = WebClient.create("http://localhost:11434")
+
 
     private val SYSTEM_PROMPT = """
 You are a technical assistant specialized in 3GPP standards, including specifications such as LTE, NR, and 5G Core. You must provide highly detailed, precise, and technically accurate answers to questions based only on the provided context.
@@ -77,8 +88,17 @@ Context:
 
     @PostConstruct
     fun initProcessor() {
+        openAiClient = createOpenAiClient()
+
         scope.launch {
-            ensureOllamaRunning()
+            try {
+                testOpenAiConnection()
+                println("OpenAI is reachable at startup")
+            } catch (e: Exception) {
+                println("OpenAI unreachable at startup: ${e.message}")
+            }
+        }
+        scope.launch {
             while (true) {
                 val message = queue.take()
                 println("Processing message: ${message.id} using model ${message.modelName}")
@@ -87,6 +107,7 @@ Context:
             }
         }
     }
+
 
     fun addQuestionToQueue(message: MessageEntity) {
         queue.put(message)
@@ -164,6 +185,37 @@ Context:
         }
     }
 
+    private fun createOpenAiClient(): WebClient {
+        val timeoutMillis = 30_000L
+
+        val httpClient = HttpClient.create()
+            .responseTimeout(Duration.ofMillis(timeoutMillis))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, timeoutMillis.toInt())
+            .doOnConnected { conn ->
+                conn.addHandlerLast(ReadTimeoutHandler(timeoutMillis, TimeUnit.MILLISECONDS))
+                    .addHandlerLast(WriteTimeoutHandler(timeoutMillis, TimeUnit.MILLISECONDS))
+            }
+
+        val connector = ReactorClientHttpConnector(httpClient)
+
+        return WebClient.builder()
+            .baseUrl("https://api.openai.com/v1")
+            .clientConnector(connector)
+            .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer $openAiApiKey")
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .build()
+    }
+    private suspend fun testOpenAiConnection() {
+        val response = openAiClient.get()
+            .uri("/models")
+            .retrieve()
+            .bodyToMono(String::class.java)
+            .awaitSingle()
+        println("OpenAI models response: ${response.take(1000)}...")
+    }
+
+
+
     private suspend fun queryChatGpt(message: MessageEntity) {
         println("Processing message ${message.id} via 'queryChatGpt' (OpenAI GPT)")
 
@@ -186,22 +238,20 @@ Context:
                                 )
                             )
 
-                            val openAiClient = WebClient.create("https://api.openai.com/v1")
+                            safeExecuteWithRetry {
+                                val response = openAiClient.post()
+                                    .uri("/chat/completions")// a co robi ta linijka
+                                    .bodyValue(request)
+                                    .retrieve()
+                                    .bodyToMono(OpenAiResponse::class.java)
+                                    .awaitSingle()
 
-                            val response = openAiClient.post()
-                                .uri("/chat/completions")
-                                .header("Authorization", "Bearer $openAiApiKey")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(request)
-                                .retrieve()
-                                .bodyToMono(OpenAiResponse::class.java)
-                                .awaitSingle()
+                                val answerText = response.choices.firstOrNull()?.message?.content
+                                    ?: "No response from OpenAI."
 
-                            val answerText = response.choices.firstOrNull()?.message?.content
-                                ?: "No response from OpenAI."
-
-                            val updatedMessage = saveAnswer(message, answerText)
-                            messageSocketHandler.sendMessageToUser(message.userId, updatedMessage)
+                                val updatedMessage = saveAnswer(message, answerText)
+                                messageSocketHandler.sendMessageToUser(message.userId, updatedMessage)
+                            }
 
                         } catch (e: Exception) {
                             val errorMsg = "OpenAI API call failed for message ${message.id}: ${e.message}"
@@ -212,11 +262,12 @@ Context:
                 }
             )
         } catch (e: Exception) {
-            val errorMsg = "Hybrid search failed (LLAMA3_MEDIUM) for message ${message.id}: ${e.message}"
+            val errorMsg = "Hybrid search failed (chatGPT) for message ${message.id}: ${e.message}"
             println(errorMsg)
-            saveAnswer(message, "Error in search (LLAMA3_MEDIUM): ${e.message}")
+            saveAnswer(message, "Error in search (chatGPT): ${e.message}")
         }
     }
+
 
     private suspend fun queryGemini(message: MessageEntity) {
         println("Processing message ${message.id} via 'queryGemini' (Google AI). Model in message: ${message.modelName}")
@@ -297,6 +348,24 @@ Context:
             }
         }
     }
+
+    private suspend fun safeExecuteWithRetry(
+        maxRetries: Int = 3,
+        delayMillis: Long = 50,
+        block: suspend () -> Unit
+    ) {
+        repeat(maxRetries) { attempt ->
+            try {
+                block()
+                return
+            } catch (e: Exception) {
+                println("Attempt ${attempt + 1} failed: ${e.message}")
+                if (attempt == maxRetries - 1) throw e
+                delay(delayMillis)
+            }
+        }
+    }
+
 
 
 

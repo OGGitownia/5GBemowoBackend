@@ -11,8 +11,12 @@ data class MessageDTO(
     val answered: Boolean,
     val userId: Long,
     val chatId: String,
-    val baseId: String
+    val baseId: String,
+    val release: String,
+    val series: String,
+    val norm: String
 )
+
 
 fun MessageEntity.toDTO(): MessageDTO = MessageDTO(
     id = id,
@@ -25,6 +29,10 @@ fun MessageEntity.toDTO(): MessageDTO = MessageDTO(
     answered = answered,
     userId = userId,
     chatId = chatId,
-    baseId = baseId
+    baseId = baseId,
+    release = release,
+    series = series,
+    norm = norm
 )
+
 

@@ -6,7 +6,6 @@ import java.time.LocalDateTime
 @Entity
 @Table(name = "bases")
 data class BaseEntity(
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
@@ -32,7 +31,16 @@ data class BaseEntity(
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    val createdWthMethod: BaseCreatingMethods = BaseCreatingMethods.FITTED_OVERLAP
+    val createdWthMethod: BaseCreatingMethods = BaseCreatingMethods.FITTED_OVERLAP,
+
+    @Column(nullable = false)
+    val release: String = "",
+
+    @Column(nullable = false)
+    val series: String = "",
+
+    @Column(nullable = false)
+    val norm: String = ""
 ) {
     constructor() : this(
         id = 0,
@@ -42,8 +50,11 @@ data class BaseEntity(
         createdAt = LocalDateTime.now(),
         maxContextWindow = 0,
         multiSearchAllowed = false,
-        createdWthMethod = BaseCreatingMethods.FITTED_OVERLAP
-)
+        createdWthMethod = BaseCreatingMethods.FITTED_OVERLAP,
+        release = "",
+        series = "",
+        norm = ""
+    )
 }
 
 

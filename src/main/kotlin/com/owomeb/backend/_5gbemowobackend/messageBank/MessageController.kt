@@ -27,13 +27,17 @@ class MessageController(private val messageRepository: MessageRepository,
             answer = dto.answer,
             answeredAt = dto.answeredAt?.let { Instant.ofEpochMilli(it) },
             answered = dto.answered,
-            baseId = dto.baseId
+            baseId = dto.baseId,
+            release = dto.release,
+            series = dto.series,
+            norm = dto.norm
         )
         messageRepository.save(message)
         messageService.addQuestionToQueue(message)
 
         return ResponseEntity.ok("Message received and processing started")
     }
+
 
     @GetMapping("/{id}")
     fun getMessage(@PathVariable id: String): ResponseEntity<MessageDTO> {

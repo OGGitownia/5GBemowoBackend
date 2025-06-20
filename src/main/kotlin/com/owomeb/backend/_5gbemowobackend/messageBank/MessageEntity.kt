@@ -41,5 +41,14 @@ data class MessageEntity(
     val chatId: String = "",
 
     @Column(nullable = false)
-    val baseId: String = ""
+    val baseId: String = "",
+
+    @Column(nullable = false)
+    val release: String = "",
+
+    @Column(nullable = false)
+    val series: String = "",
+
+    @Column(nullable = false)
+    val norm: String = ""
 )

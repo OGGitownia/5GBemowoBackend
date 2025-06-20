@@ -19,7 +19,16 @@ class BaseController(
     @PostMapping("/create")
     fun createBase(@RequestBody request: CreateBaseRequest): ResponseEntity<Any> {
         return try {
-            val baseId = baseService.createBase(request.sourceUrl, request.selectedMethod, request.userId)
+            val baseId = baseService.createBase(
+                sourceUrl = request.sourceUrl,
+                method = request.selectedMethod,
+                multiSearchAllowed = request.multiSearchAllowed,
+                release = request.release,
+                series = request.series,
+                norm = request.norm,
+                maxContextWindow = request.maxContextWindow
+            )
+
             commissionManager.submitCommission(
                 baseId = baseId,
                 sourceUrl = request.sourceUrl,
@@ -35,8 +44,11 @@ class BaseController(
 
     @GetMapping
     fun getAllBases(): List<BaseEntity> {
+        val allBases = baseService.listAllBases()
         println("getAllBases")
-        return baseService.listAllBases()
+        println(allBases)
+
+        return allBases
     }
     fun deleteBaseBySourceUrl(url: String) {
         println("Próba usuwaniaDELETEBASEBYSOURCEURL")
